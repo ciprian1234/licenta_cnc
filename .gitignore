@@ -1,3 +1,4 @@
+software/.gitignore
 software/.pioenvs
 software/.piolibdeps
 software/.clang_complete
