@@ -2,8 +2,8 @@
 #include "system.h"
 #include <stdlib.h>
 // Private functions declaration
-static bool isValidCharacter(uint8_t ch);
-static bool isNumericSymbol(uint8_t ch);
+static bool isValidCharacter(char ch);
+static bool isNumericSymbol(char ch);
 
 
 
@@ -37,7 +37,7 @@ uint8_t readLine(int16_t inputChar, Rx_buffer_t& buffer, uint8_t size)
         }
         else
         {
-          buffer.data[buffer.currentWritePos++] = (uint8_t)inputChar;
+          buffer.data[buffer.currentWritePos++] = (char)inputChar;
         }
       }
   }
@@ -62,12 +62,12 @@ uint8_t parseNumber(Rx_buffer_t& buffer, float& outputNumber)
     numberStr[pos++] = buffer.data[ buffer.currentParsePos++ ];
   }
   numberStr[pos] = 0; // append null to the end
+  if(pos == 0 ) { return ERROR_INVALID_NUMBER_FORMAT; }
 
-  // Debug
+  // DEBUG
   Serial.print("2.EXTRACTION: {{"); Serial.print(numberStr); Serial.print("}}\n");
-  outputNumber = atof(numberStr);
-  //if( (outputNumber == 0.0) && (strncmp(numberStr, "0.0", 3) != 0) ) { return ERROR_INVALID_NUMBER_FORMAT; }
 
+  outputNumber = atof(numberStr);
   return RETURN_SUCCES;
 }
 
@@ -75,7 +75,7 @@ uint8_t parseNumber(Rx_buffer_t& buffer, float& outputNumber)
 
 
 /* Check if a received character is a valid gcode character */
-static bool isValidCharacter(uint8_t ch)
+static bool isValidCharacter(char ch)
 {
   if( (ch >= '0' && ch <= '9') ||
       (ch >= 'a' && ch <= 'z') ||
@@ -93,7 +93,8 @@ static bool isValidCharacter(uint8_t ch)
   }
 }
 
-static bool isNumericSymbol(uint8_t ch)
+/* Check if a character is a numeric symbol */
+static bool isNumericSymbol(char ch)
 {
   if( (ch == '-') || (ch >= '0' && ch <= '9') || (ch == '.') )
     return true;
