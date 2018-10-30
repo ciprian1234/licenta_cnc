@@ -1,6 +1,7 @@
 #ifndef MACHINE_H
 #define MACHINE_H
 
+#include "system.h"
 #include "utilities.h"
 
 #define COMMAND_TYPE_G        0U

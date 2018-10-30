@@ -31,7 +31,7 @@ void loop() {
   if( true == rx_buffer.ready)
   {
     // parse line
-    returnedStatus = machine.parseLine();
+    returnedStatus = machine.parseLine(rx_buffer);
     if(RETURN_SUCCES != returnedStatus) { handleRuntimeError(returnedStatus); return; }
 
     // execute machine command
