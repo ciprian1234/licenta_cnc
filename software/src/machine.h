@@ -57,6 +57,19 @@ typedef struct
   float new_x, new_y, new_z; // new x y z position for 3d printer
   float new_f;    // new feed rate speed
   float i, j;  // for arc movement radius distance.
+
+  union {
+    uint8_t all;
+    struct {
+      uint8_t x:1;
+      uint8_t y:1;
+      uint8_t z:1;
+      uint8_t i:1;
+      uint8_t j:1;
+      uint8_t f:1; //required??
+    };
+  }moveFlags;
+
 }MachineCommand_t;
 
 

@@ -80,19 +80,22 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
         switch(commandSymbol)
         {
           case 'X':
-            // set to active X movement flag
+            // set x move flag to indicate movement in x direction
+            this->currentCommand.moveFlags.x = true;
             if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->currentCommand.new_x = commandNumber; } // absolute
             else { this->currentCommand.new_x = this->machineState.x + commandNumber; } // relative positioning
             break;
 
           case 'Y':
-            // set to active Y movement flag
+            // set y move flag to indicate movement in x direction
+            this->currentCommand.moveFlags.y = true;
             if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->currentCommand.new_y = commandNumber; } // absolute
             else { this->currentCommand.new_y = this->machineState.y + commandNumber; } // relative positioning
             break;
 
           case 'Z': break;
-            // set to active Y movement flag
+            // set z move flag to indicate movement in x direction
+            this->currentCommand.moveFlags.z = true;
             if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->currentCommand.new_y = commandNumber; } // absolute
             else { this->currentCommand.new_y = this->machineState.y + commandNumber; } // relative positioning
             break;
@@ -115,6 +118,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 uint8_t Machine::executeCommand()
 {
   // execute movement command
-  switch()
+
+
   return RETURN_SUCCES;
 }
