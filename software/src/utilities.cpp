@@ -47,28 +47,26 @@ uint8_t readLine(int16_t inputChar, Rx_buffer_t& buffer, uint8_t size)
 
 
 
-uint8_t parseNumber(Rx_buffer_t& buffer, float outputNumber)
+uint8_t parseNumber(Rx_buffer_t& buffer, float& outputNumber)
 {
   // Ex of max size possible number: -12345.12345678
   const uint8_t MAX_NUMBER_SIZE = 16;
-  uint8_t numberStr[MAX_NUMBER_SIZE];
-  uint8_t ch = 0;
+  char numberStr[MAX_NUMBER_SIZE];
 
-  // extract string formatted number
+  // extract number in string format
   uint8_t pos = 0;
-  while( buffer.data[ buffer.currentParsePos] != ' ')
+  while( isNumericSymbol(buffer.data[buffer.currentParsePos]) )
   {
-    if(pos >= MAX_NUMBER_SIZE -1) { return ERROR_INVALID_NUMBER_FORMAT; }
+    if(pos >= MAX_NUMBER_SIZE-1) { return ERROR_INVALID_NUMBER_FORMAT; }
     if(buffer.currentParsePos >= RX_BUFF_SIZE-1 ) { return ERROR_INVALID_NUMBER_FORMAT; }
-
-    ch = buffer.data[ buffer.currentParsePos++ ];
-    if( false != isNumericSymbol(ch) ) { return ERROR_INVALID_NUMBER_FORMAT; }
-    numberStr[pos++] = ch;
+    numberStr[pos++] = buffer.data[ buffer.currentParsePos++ ];
   }
   numberStr[pos] = 0; // append null to the end
 
+  // Debug
+  Serial.print("2.EXTRACTION: {{"); Serial.print(numberStr); Serial.print("}}\n");
   outputNumber = atof(numberStr);
-  if( (outputNumber == 0.0) && (strncmp(numberStr, "0.0", 3) != 0) ) { return ERROR_INVALID_NUMBER_FORMAT; }
+  //if( (outputNumber == 0.0) && (strncmp(numberStr, "0.0", 3) != 0) ) { return ERROR_INVALID_NUMBER_FORMAT; }
 
   return RETURN_SUCCES;
 }
@@ -84,7 +82,8 @@ static bool isValidCharacter(uint8_t ch)
       (ch >= 'A' && ch <= 'Z') ||
       (ch == '#') ||
       (ch == '-') ||
-      (ch == '.') )
+      (ch == '.') ||
+      (ch == ' ') )
   {
     return true;
   }

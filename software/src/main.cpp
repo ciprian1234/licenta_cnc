@@ -30,6 +30,10 @@ void loop() {
   // if buffer is ready (an entire line is recieved)
   if( true == rx_buffer.ready)
   {
+    //char tempBuffer[128];
+    //strcpy(tempBuffer, rx_buffer.data);
+    Serial.print("1.INPUT: <<"); Serial.print(rx_buffer.data); Serial.print(">>\n");
+
     // parse line
     returnedStatus = machine.parseLine(rx_buffer);
     if(RETURN_SUCCES != returnedStatus) { handleRuntimeError(returnedStatus); return; }
@@ -41,7 +45,8 @@ void loop() {
     /* TODO: maybe save some system information */
 
     // send pozitive feedback to Serial if everything went ok
-    Serial.print( F("CNC>>>done") );
+    memset(&rx_buffer, 0u, sizeof(Rx_buffer_t));
+    Serial.print( F("CNC>>>done\n") );
   }
 
 }

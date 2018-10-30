@@ -7,7 +7,7 @@
 // Data types
 typedef struct
 {
-  uint8_t data[RX_BUFF_SIZE];
+  char data[RX_BUFF_SIZE];
   uint8_t currentWritePos;  // current reading position in data buffer
   uint8_t currentParsePos;  // current parsing position in data buffer
   boolean ready;            // is set to true if buffer is ready for parsing
@@ -16,7 +16,7 @@ typedef struct
 
 // Functions
 uint8_t readLine(int16_t inputChar, Rx_buffer_t& buffer, uint8_t size);
-uint8_t parseNumber(Rx_buffer_t& buffer, float outputNumber);
+uint8_t parseNumber(Rx_buffer_t& buffer, float& outputNumber);
 
 
 #endif

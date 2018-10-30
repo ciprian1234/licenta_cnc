@@ -36,6 +36,13 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 
     returnedStatus = parseNumber(buffer, commandNumber);
     if( RETURN_SUCCES != returnedStatus) { return returnedStatus; }
+    integerPart = (int16_t)commandNumber;
+
+    // debug
+    Serial.print("3.PARSING:\n");
+    Serial.print("CommandSymbol: ["); Serial.print(commandSymbol);  Serial.print("]\n");
+    Serial.print("CommandNumber: ["); Serial.print(commandNumber);  Serial.print("]\n");
+    Serial.print("IntegerPart: [");   Serial.print(integerPart);    Serial.print("]\n\n");
 
     switch(commandSymbol)
     {
@@ -69,7 +76,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
         // hanndle command parameters
         switch(commandSymbol)
         {
-          //case ' ': break; // ignore spaces
+          case ' ': break; // ignore spaces
           case 'X': break;
           case 'Y': break;
           case 'Z': break;
@@ -83,6 +90,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
   } //end while
 
   // Line parsing complete
+  buffer.ready = false;
   return RETURN_SUCCES;
 }
 
