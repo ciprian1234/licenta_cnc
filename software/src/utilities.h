@@ -15,8 +15,8 @@ typedef struct
 
 
 // Functions
-uint8_t readLine(int16_t inputChar, Rx_buffer_t& buffer, uint8_t size);\
-uint8_t parseRationalNumber(Rx_buffer_t& stringNumber, int16_t& integerPart, uint16_t& fractionalPart );
+uint8_t readLine(int16_t inputChar, Rx_buffer_t& buffer, uint8_t size);
+uint8_t parseNumber(Rx_buffer_t& buffer, float outputNumber);
 
 
 #endif

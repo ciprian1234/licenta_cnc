@@ -2,7 +2,6 @@
 #define MACHINE_H
 
 #include "system.h"
-#include "utilities.h"
 
 #define COMMAND_TYPE_G        0U
 #define COMMAND_TYPE_M        1U

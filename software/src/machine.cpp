@@ -25,15 +25,16 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 {
   uint8_t returnedStatus = RETURN_SUCCES;
   uint8_t commandSymbol = 0u;
+  float commandNumber = 0.0;
   int16_t integerPart = 0;
-  uint16_t fractionalPart = 0u;
+
 
   while(buffer.data[buffer.currentParsePos] != 0)
   {
     // get command symbol and increment current parsing position
     commandSymbol = buffer.data[buffer.currentParsePos++];
 
-    returnedStatus = parseRationalNumber(buffer, integerPart, fractionalPart );
+    returnedStatus = parseNumber(buffer, commandNumber);
     if( RETURN_SUCCES != returnedStatus) { return returnedStatus; }
 
     switch(commandSymbol)
@@ -88,5 +89,5 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 
 uint8_t Machine::executeCommand()
 {
-
+  return RETURN_SUCCES;
 }

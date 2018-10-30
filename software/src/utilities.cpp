@@ -1,10 +1,9 @@
 #include "utilities.h"
-#include <avr/wdt.h>
+#include "system.h"
 #include <stdlib.h>
-
-
 // Private functions declaration
 static bool isValidCharacter(uint8_t ch);
+static bool isNumericSymbol(uint8_t ch);
 
 
 
@@ -53,53 +52,25 @@ uint8_t parseNumber(Rx_buffer_t& buffer, float outputNumber)
   // Ex of max size possible number: -12345.12345678
   const uint8_t MAX_NUMBER_SIZE = 16;
   uint8_t numberStr[MAX_NUMBER_SIZE];
-
   uint8_t ch = 0;
-  uint8_t currentDigit = 0;
-  int8_t negativeFactor = 1;
-
 
   // extract string formatted number
   uint8_t pos = 0;
   while( buffer.data[ buffer.currentParsePos] != ' ')
   {
-    if(pos >= size -1) { return ERROR_NUMBER_PARSING; }
-    if(buffer.currentParsePos >= RX_BUFF_SIZE-1 ) { return ERROR_PARSING_NUMBER; }
+    if(pos >= MAX_NUMBER_SIZE -1) { return ERROR_INVALID_NUMBER_FORMAT; }
+    if(buffer.currentParsePos >= RX_BUFF_SIZE-1 ) { return ERROR_INVALID_NUMBER_FORMAT; }
 
     ch = buffer.data[ buffer.currentParsePos++ ];
-    if( false != isNumericSymbol(ch) ) { return ERROR_PARSING_NUMBER; }
+    if( false != isNumericSymbol(ch) ) { return ERROR_INVALID_NUMBER_FORMAT; }
     numberStr[pos++] = ch;
   }
   numberStr[pos] = 0; // append null to the end
 
   outputNumber = atof(numberStr);
-  if( (outputNumber == 0.0) && (strncmp(numberStr, "0.0", 3) != 0) ) { return ERROR_PARSING_NUMBER; }
+  if( (outputNumber == 0.0) && (strncmp(numberStr, "0.0", 3) != 0) ) { return ERROR_INVALID_NUMBER_FORMAT; }
 
   return RETURN_SUCCES;
-}
-
-
-
-uint8_t stringToInteger(uint8_t* inputString, uint8_t digits, int16_t& outputNumber)
-{
-  uint8_t curentDigitValue;
-
-  if()
-
-  for(uint8_t pos = digits-1; digits>=0; digits-- )
-  {
-    if( inputString[pos] >= '0' && inputString[pos] <= '9')
-    {
-      curentDigitValue = inputString[pos] - (uint8_t)'0';
-      outputNumber += pow(10, pos) * curentDigitValue;
-    }
-    else
-    {
-      return RETURN_ERROR;
-    }
-  }
-  // 4321 = 4 * 1000
-
 }
 
 

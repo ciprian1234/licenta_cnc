@@ -1,7 +1,8 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef SYSTEM_H
+#define SYSTEM_H
 
 #include <Arduino.h>
+#include "utilities.h"
 
 // If debug is enabled, debug messages will be sent to serial
 #define DEBUG_ENABLED (1u)
@@ -17,7 +18,7 @@ extern Rx_buffer_t rx_buffer;
 #define ERROR_INVALID_CHAR_RECEIVED   (2u)
 #define ERROR_COMMAND_NOT_SUPPORTED   (3u)
 #define ERROR_SYMBOL_NOT_SUPPORTED    (4u)
-#define ERROR_PARSING_NUMBER          (5u)
+#define ERROR_INVALID_NUMBER_FORMAT   (5u)
 
 
 void performSoftwareReset(void);
@@ -34,4 +35,3 @@ void handleRuntimeError(uint8_t errorCode);
 // state and send negative feedback
 
 // If ERROR_COMMAND_NOT_SUPPORTED, ignore current command, send feedback, go to next command
-//
