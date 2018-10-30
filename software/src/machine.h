@@ -29,7 +29,7 @@ typedef struct
 {
   float x, y, z;  // Current position of the machine
   float f;        // Current speed of the machine (mm/minute)
-  float acceleration; //machine acceleration
+  float acceleration; // Machine acceleration
 }MachineState_t;
 
 
@@ -73,12 +73,13 @@ private:
   MachineEndSwitches_t endSwitches;
 
   // Private Functions
-  void executeCommand();
+
 
 public:
   Machine();
   void init();
-  void parseLine(Rx_buffer_t& buffer, uint8_t size);
+  uint8_t parseLine(Rx_buffer_t& buffer);
+  uint8_t executeCommand();
 
 };
 

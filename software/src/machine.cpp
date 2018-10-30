@@ -14,61 +14,79 @@ void Machine::init()
   memset(&this->currentCommand, 0, sizeof(MachineCommand_t) );
   memset(&this->endSwitches, 0, sizeof(MachineEndSwitches_t) );
 
-  this->machineMode.unit = COMMAND_UNIT_G21;
-  this->machineMode.positioning = COMMAND_POSITIONING_G90; // set absolute mode positioning
+  this->machineMode.unit = COMMAND_UNIT_G21;  // set default unit to mm
+  this->machineMode.positioning = COMMAND_POSITIONING_G90; // set default absolute mode positioning
 }
 
 
-void Machine::parseLine(Rx_buffer_t& buffer, uint8_t size)
+
+
+uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 {
-  uint8_t commandType = 0;
-  uint16_t integerPart = 0;
-  uint16_t fractionalPart = 0;
+  uint8_t returnedStatus = RETURN_SUCCES;
+  uint8_t commandSymbol = 0u;
+  int16_t integerPart = 0;
+  uint16_t fractionalPart = 0u;
 
-  uint8_t pos = 0;
-  while(buffer.data[pos] != 0)
+  while(buffer.data[buffer.currentParsePos] != 0)
   {
+    // get command symbol and increment current parsing position
+    commandSymbol = buffer.data[buffer.currentParsePos++];
 
-    //read real number;
+    returnedStatus = parseRationalNumber(buffer, integerPart, fractionalPart );
+    if( RETURN_SUCCES != returnedStatus) { return returnedStatus; }
 
-    switch(buffer.data[pos])
+    switch(commandSymbol)
     {
       case 'G':
+        // Handle G type commands
+        switch(integerPart)
+        {
+          case COMMAND_MOVEMENT_G00: break;
+          case COMMAND_MOVEMENT_G01: break;
+          case COMMAND_MOVEMENT_G02: break;
+          case COMMAND_MOVEMENT_G03: break;
+          case COMMAND_G28: break;
+          case COMMAND_UNIT_G20: break;
+          case COMMAND_UNIT_G21: break;
+          case COMMAND_POSITIONING_G90: break;
+          case COMMAND_POSITIONING_G91: break;
+          default:
+            return ERROR_COMMAND_NOT_SUPPORTED;
+        }
+        break;
 
-        break;
       case 'M':
-        // TODO
+        // TODO: implement M commands
         break;
+
       case '#':
         // handle special commands
         break;
+
       default:
-        switch(buffer.data[pos])
+        // hanndle command parameters
+        switch(commandSymbol)
         {
-          case ' ': break; // ignore spaces
-          case 'X':
-            break;
-          case 'Y':
-            break;
-          case 'Z':
-            break;
-          case 'F':
-            break;
-          case 'I':
-            break;
-          case 'J':
-            break;
+          //case ' ': break; // ignore spaces
+          case 'X': break;
+          case 'Y': break;
+          case 'Z': break;
+          case 'F': break;
+          case 'I': break;
+          case 'J': break;
           default:
-            ;
+            return ERROR_SYMBOL_NOT_SUPPORTED;
         } // end switch 2
     } // end switch 1
-
   } //end while
 
+  // Line parsing complete
+  return RETURN_SUCCES;
 }
 
 
-void Machine::executeCommand()
+uint8_t Machine::executeCommand()
 {
 
 }
