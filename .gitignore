@@ -1,0 +1,4 @@
+software/.pioenvs
+software/.piolibdeps
+software/.clang_complete
+software/.gcc-flags.json
