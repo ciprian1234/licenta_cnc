@@ -54,7 +54,7 @@ typedef struct
 {
   uint8_t type;   // could either be COMMAND_TYPE_G, COMMAND_TYPE_M, or COMMAND_TYPE_SPECIAL
   uint8_t code;   // command code number
-  float new_X, new_Y, new_Z; // new x y z position for 3d printer
+  float new_x, new_y, new_z; // new x y z position for 3d printer
   float new_f;    // new feed rate speed
   float i, j;  // for arc movement radius distance.
 }MachineCommand_t;
