@@ -2,6 +2,7 @@
 #define MACHINE_H
 
 #include "system.h"
+#include "motor.h"
 
 #define COMMAND_TYPE_G        0U
 #define COMMAND_TYPE_M        1U
@@ -20,10 +21,14 @@
 
 #define COMMAND_G28   28U   // move to home
 
+
+
 typedef struct
 {
   float x, y, z;
 }Point_3d_t;
+
+
 
 typedef struct
 {
@@ -33,13 +38,6 @@ typedef struct
 }MachineState_t;
 
 
-typedef struct
-{
-  bool x_end;   // x endpoint switch
-  bool y_end;   // y endpoint switch
-  bool z_end;   // z endpoint switch
-}MachineEndSwitches_t;
-
 
 typedef struct
 {
@@ -47,6 +45,8 @@ typedef struct
   uint8_t unit;         // set unit to mm (G21) or inches G20
   uint8_t positioning;  // G90 for absolute, G91 for incremental
 }MachineMode_t;
+
+
 
 
 typedef struct
@@ -76,7 +76,9 @@ private:
   MachineState_t machineState;
   MachineMode_t machineMode;
   MachineCommand_t currentCommand;
-  MachineEndSwitches_t endSwitches;
+  Motor motor_x;
+  Motor motor_y;
+  Motor motor_z;
 
   // Private Functions
 

@@ -1,6 +1,10 @@
 #include "machine.h"
+#include "platform_config.h"
 
-Machine::Machine()
+Machine::Machine():
+  motor_x(PIN_MOTOR_X_DIR, PIN_MOTOR_X_STEP, PIN_ENDSTOP_X),
+  motor_y(PIN_MOTOR_Y_DIR, PIN_MOTOR_Y_STEP, PIN_ENDSTOP_Y),
+  motor_z(PIN_MOTOR_Z_DIR, PIN_MOTOR_Z_STEP, PIN_ENDSTOP_Z)
 {
   this->init();
 }
@@ -12,7 +16,6 @@ void Machine::init()
   memset(&this->machineState, 0, sizeof(MachineState_t) );
   memset(&this->machineMode, 0, sizeof(MachineMode_t) );
   memset(&this->currentCommand, 0, sizeof(MachineCommand_t) );
-  memset(&this->endSwitches, 0, sizeof(MachineEndSwitches_t) );
 
   this->machineMode.unit = COMMAND_UNIT_G21;  // set default unit to mm
   this->machineMode.positioning = COMMAND_POSITIONING_G90; // set default absolute mode positioning
@@ -103,9 +106,7 @@ uint8_t Machine::executeMovementCommand()
   switch(this->machineMode.movement)
   {
     case COMMAND_MOVEMENT_G00:
-
-
-
+      // TODO:
       break;
     case COMMAND_MOVEMENT_G01:
       break;
