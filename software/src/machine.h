@@ -46,7 +46,6 @@ typedef struct
   uint8_t movement;     // movement mode chould be G00 G01 G02 G03
   uint8_t unit;         // set unit to mm (G21) or inches G20
   uint8_t positioning;  // G90 for absolute, G91 for incremental
-
 }MachineMode_t;
 
 
@@ -55,20 +54,13 @@ typedef struct
   uint8_t type;   // could either be COMMAND_TYPE_G, COMMAND_TYPE_M, or COMMAND_TYPE_SPECIAL
   uint8_t code;   // command code number
   float new_x, new_y, new_z; // new x y z position for 3d printer
+  float new_i, new_j;  // for arc movement radius distance.
   float new_f;    // new feed rate speed
-  float i, j;  // for arc movement radius distance.
 
   union {
     uint8_t all;
-    struct {
-      uint8_t x:1;
-      uint8_t y:1;
-      uint8_t z:1;
-      uint8_t i:1;
-      uint8_t j:1;
-      uint8_t f:1; //required??
-    };
-  }moveFlags;
+    struct { uint8_t x:1, y:1, z:1, i:1, j:1, f:1; };
+  }moveFlags; // movement flags
 
 }MachineCommand_t;
 
@@ -87,13 +79,12 @@ private:
 
   // Private Functions
 
-
 public:
   Machine();
   void init();
   uint8_t parseLine(Rx_buffer_t& buffer);
   uint8_t executeCommand();
-
+  
 };
 
 #endif

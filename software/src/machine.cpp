@@ -53,17 +53,16 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
         currentCommand.type = COMMAND_TYPE_G;
         switch(integerPart)
         {
-          case COMMAND_MOVEMENT_G00: machineMode.movement = COMMAND_MOVEMENT_G00; break;
-          case COMMAND_MOVEMENT_G01: machineMode.movement = COMMAND_MOVEMENT_G01; break;
-          case COMMAND_MOVEMENT_G02: machineMode.movement = COMMAND_MOVEMENT_G02; break;
-          case COMMAND_MOVEMENT_G03: machineMode.movement = COMMAND_MOVEMENT_G03; break;
-          case COMMAND_G28: /* TODO: implement go to home */ break;
-          case COMMAND_UNIT_G20: this->machineMode.unit = COMMAND_UNIT_G20; break;
-          case COMMAND_UNIT_G21: this->machineMode.unit = COMMAND_UNIT_G21; break;
+          case COMMAND_MOVEMENT_G00:    machineMode.movement = COMMAND_MOVEMENT_G00; break;
+          case COMMAND_MOVEMENT_G01:    machineMode.movement = COMMAND_MOVEMENT_G01; break;
+          case COMMAND_MOVEMENT_G02:    machineMode.movement = COMMAND_MOVEMENT_G02; break;
+          case COMMAND_MOVEMENT_G03:    machineMode.movement = COMMAND_MOVEMENT_G03; break;
+          case COMMAND_G28:             /* TODO: implement go to home */ break;
+          case COMMAND_UNIT_G20:        this->machineMode.unit = COMMAND_UNIT_G20; break;
+          case COMMAND_UNIT_G21:        this->machineMode.unit = COMMAND_UNIT_G21; break;
           case COMMAND_POSITIONING_G90: this->machineMode.positioning = COMMAND_POSITIONING_G90; break;
           case COMMAND_POSITIONING_G91: this->machineMode.positioning = COMMAND_POSITIONING_G90; break;
-          default:
-            return ERROR_COMMAND_NOT_SUPPORTED;
+          default: return ERROR_COMMAND_NOT_SUPPORTED;
         }
         break;
 
@@ -79,32 +78,13 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
         // hanndle command parameters
         switch(commandSymbol)
         {
-          case 'X':
-            // set x move flag to indicate movement in x direction
-            this->currentCommand.moveFlags.x = true;
-            if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->currentCommand.new_x = commandNumber; } // absolute
-            else { this->currentCommand.new_x = this->machineState.x + commandNumber; } // relative positioning
-            break;
-
-          case 'Y':
-            // set y move flag to indicate movement in x direction
-            this->currentCommand.moveFlags.y = true;
-            if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->currentCommand.new_y = commandNumber; } // absolute
-            else { this->currentCommand.new_y = this->machineState.y + commandNumber; } // relative positioning
-            break;
-
-          case 'Z': break;
-            // set z move flag to indicate movement in x direction
-            this->currentCommand.moveFlags.z = true;
-            if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->currentCommand.new_y = commandNumber; } // absolute
-            else { this->currentCommand.new_y = this->machineState.y + commandNumber; } // relative positioning
-            break;
-
-          case 'I': break;
-          case 'J': break;
-          case 'F': break;
-          default:
-            return ERROR_SYMBOL_NOT_SUPPORTED;
+          case 'X': this->currentCommand.moveFlags.x = true;  this->currentCommand.new_x = commandNumber; break;
+          case 'Y': this->currentCommand.moveFlags.y = true;  this->currentCommand.new_y = commandNumber; break;
+          case 'Z': this->currentCommand.moveFlags.z = true;  this->currentCommand.new_z = commandNumber; break;
+          case 'I': this->currentCommand.moveFlags.i = true;  this->currentCommand.new_i = commandNumber; break;;
+          case 'J': this->currentCommand.moveFlags.j = true;  this->currentCommand.new_j = commandNumber; break;;
+          case 'F': this->currentCommand.moveFlags.f = true;  this->currentCommand.new_f = commandNumber; break;;
+          default: return ERROR_SYMBOL_NOT_SUPPORTED;
         } // end switch 2
     } // end switch 1
   } //end while
@@ -118,7 +98,9 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 uint8_t Machine::executeCommand()
 {
   // execute movement command
+  if(!this->currentCommand.moveFlags.all) { return RETURN_SUCCES; } // no movement is requested
 
+  
 
   return RETURN_SUCCES;
 }
