@@ -50,7 +50,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
     switch(commandSymbol)
     {
       case 'G':
-        currentCommand.type = COMMAND_TYPE_G;
+        // handle G type commands
         switch(integerPart)
         {
           case COMMAND_MOVEMENT_G00:    machineMode.movement = COMMAND_MOVEMENT_G00; break;
@@ -95,12 +95,28 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 }
 
 
-uint8_t Machine::executeCommand()
+uint8_t Machine::executeMovementCommand()
 {
-  // execute movement command
-  if(!this->currentCommand.moveFlags.all) { return RETURN_SUCCES; } // no movement is requested
 
-  
+  if(!this->currentCommand.moveFlags.all) { return RETURN_SUCCES; } // no movement requested
+
+  switch(this->machineMode.movement)
+  {
+    case COMMAND_MOVEMENT_G00:
+
+
+
+      break;
+    case COMMAND_MOVEMENT_G01:
+      break;
+    case COMMAND_MOVEMENT_G02:
+      break;
+    case COMMAND_MOVEMENT_G03:
+      break;
+    default:
+      return ERROR_UNEXPECTED;
+  }
+
 
   return RETURN_SUCCES;
 }

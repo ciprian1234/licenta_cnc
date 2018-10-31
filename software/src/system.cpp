@@ -39,7 +39,10 @@ void handleRuntimeError(uint8_t errorCode)
       Serial.print( F("CNC>>>error: Invalid number format or number size exceded!\n") );
       break;
 
-    //case ERROR_NUMBER_BUFFER_EXCEDED: break;
+    case ERROR_UNEXPECTED:
+      Serial.print( F("CNC>>>error: An unexpected error occured!\n") );
+      break;
+
     default:
       Serial.print( F("CNC>>>error: Unhandled error!\n") );
   }

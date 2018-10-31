@@ -13,12 +13,13 @@
 extern Rx_buffer_t rx_buffer;
 
 // Return status of the function is
-#define RETURN_SUCCES                 (0u)
-#define ERROR_RX_BUFFER_OVERFLOW      (1u)
-#define ERROR_INVALID_CHAR_RECEIVED   (2u)
-#define ERROR_COMMAND_NOT_SUPPORTED   (3u)
-#define ERROR_SYMBOL_NOT_SUPPORTED    (4u)
-#define ERROR_INVALID_NUMBER_FORMAT   (5u)
+#define RETURN_SUCCES                   (0u)
+#define ERROR_RX_BUFFER_OVERFLOW        (1u)
+#define ERROR_INVALID_CHAR_RECEIVED     (2u)
+#define ERROR_COMMAND_NOT_SUPPORTED     (3u)
+#define ERROR_SYMBOL_NOT_SUPPORTED      (4u)
+#define ERROR_INVALID_NUMBER_FORMAT     (5u)
+#define ERROR_UNEXPECTED              (255u)
 
 
 void performSoftwareReset(void);

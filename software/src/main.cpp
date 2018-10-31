@@ -39,7 +39,7 @@ void loop() {
     if(RETURN_SUCCES != returnedStatus) { handleRuntimeError(returnedStatus); return; }
 
     // execute machine command
-    returnedStatus = machine.executeCommand();
+    returnedStatus = machine.executeMovementCommand();
     if(RETURN_SUCCES != returnedStatus) { handleRuntimeError(returnedStatus); return; }
 
     /* TODO: maybe save some system information */
