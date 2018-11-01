@@ -40,6 +40,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
     // ignore spaces
     if(commandSymbol == ' ') { continue; }
 
+    // get command number
     returnedStatus = parseNumber(buffer, commandNumber);
     if( RETURN_SUCCES != returnedStatus) { return returnedStatus; }
     integerPart = (int16_t)commandNumber;
@@ -107,6 +108,10 @@ uint8_t Machine::executeMovementCommand()
   {
     case COMMAND_MOVEMENT_G00:
       // TODO:
+
+      //move first z then x then z
+      if( true == this->currentCommand.moveFlags.x)
+
       break;
     case COMMAND_MOVEMENT_G01:
       break;
@@ -118,6 +123,6 @@ uint8_t Machine::executeMovementCommand()
       return ERROR_UNEXPECTED;
   }
 
-
+  // TODO: reset currentCommand
   return RETURN_SUCCES;
 }

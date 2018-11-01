@@ -6,8 +6,19 @@ Motor::Motor(uint8_t dirPin, uint8_t stepPin, uint8_t endstopPin):
 {
   pinMode(DIR_PIN, OUTPUT);
   pinMode(STEP_PIN, OUTPUT);
-  // TODO: pinMode(ENDSTOP_PIN, INPUT_PULLUP);
+  pinMode(ENDSTOP_PIN, INPUT_PULLUP);
 
-  digitalWrite(DIR_PIN, LOW);
-  digitalWrite(STEP_PIN, LOW);
+
+  direction = 0u;
+  stepState = 0u;
+  position = 0;
+  endstop = false;
+
+  digitalWrite(DIR_PIN, direction);
+  digitalWrite(STEP_PIN, stepState);
+  endstop = digitalRead(ENDSTOP_PIN);
 }
+
+
+
+//motor home procedure: move motor while endstop is true, then move in reverse direction while endstop is false

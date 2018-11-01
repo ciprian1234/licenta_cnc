@@ -19,7 +19,7 @@
 
 // Maximum travel speed (mm/min)
 // default speed = RPM * AXIS_TRAVEL_DISTANCE_360
-#define MAX_TRAVEL_SPEED  1000u
+#define MAX_TRAVEL_SPEED 1000u
 
 // Maximum drawing/cutting speed (mm/min)
 #define MAX_DRAWING_SPEED 400u
@@ -29,6 +29,9 @@
 
 // Number of milimeters a axis travels when an 360 rotation is complete
 #define AXIS_TRAVEL_DISTANCE_360 8u
+
+// Stepping resolution between motor steps, measured in mm
+#define STEP_RESOLUTION (((float)AXIS_TRAVEL_DISTANCE_360 / (float)NUMBER_OF_STEPS_360))
 
 
 #endif
