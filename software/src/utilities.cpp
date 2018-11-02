@@ -7,6 +7,7 @@ static bool isNumericSymbol(char ch);
 
 
 
+
 /* Read from inputChar, into the buffer until newline is reached
 *  returns: RETURN_SUCCES if no error occurs or error code number otherwise */
 uint8_t readLine(int16_t inputChar, Rx_buffer_t& buffer, uint8_t size)
@@ -92,6 +93,9 @@ static bool isValidCharacter(char ch)
     return false;
   }
 }
+
+
+
 
 /* Check if a character is a numeric symbol */
 static bool isNumericSymbol(char ch)

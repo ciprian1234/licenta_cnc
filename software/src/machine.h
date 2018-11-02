@@ -23,19 +23,12 @@
 
 
 
+
 typedef struct
 {
   float x, y, z;
 }Point_3d_t;
 
-
-
-typedef struct
-{
-  float x, y, z;  // Current position of the machine
-  float f;        // Current speed of the machine (mm/minute)
-  float acceleration; // Machine acceleration
-}MachineState_t;
 
 
 
@@ -54,12 +47,12 @@ typedef struct
   //uint8_t type;   // could either be COMMAND_TYPE_G, COMMAND_TYPE_M, or COMMAND_TYPE_SPECIAL
   //uint8_t code;   // command code number
   float new_x, new_y, new_z; // new x y z position for 3d printer
-  float new_i, new_j;  // for arc movement radius distance.
-  float new_f;    // new feed rate speed
+  float new_i, new_j, new_r;  // for arc movement radius distance.
+  uint16 new_f;    // new feed rate speed (mm/min)
 
   union {
     uint8_t all;
-    struct { uint8_t x:1, y:1, z:1, i:1, j:1, f:1; };
+    struct { uint8_t x:1, y:1, z:1, i:1, j:1, r:1, f:1; };
   }moveFlags; // movement flags
 
 }MachineCommand_t;
@@ -70,24 +63,22 @@ typedef struct
 class Machine
 {
 private:
-
-  // Private variables
+  // private variables
   Point_3d_t homePoint;
-  MachineState_t machineState;
   MachineMode_t machineMode;
   MachineCommand_t currentCommand;
   Motor motor_x;
   Motor motor_y;
   Motor motor_z;
 
-  // Private Functions
-
+  // private Functions
 public:
+  // public functions
   Machine();
   void init();
   uint8_t parseLine(Rx_buffer_t& buffer);
   uint8_t executeMovementCommand();
-
 };
+
 
 #endif

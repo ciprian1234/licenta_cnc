@@ -19,6 +19,8 @@ extern Rx_buffer_t rx_buffer;
 #define ERROR_COMMAND_NOT_SUPPORTED     (3u)
 #define ERROR_SYMBOL_NOT_SUPPORTED      (4u)
 #define ERROR_INVALID_NUMBER_FORMAT     (5u)
+//ERROR_AXIS_MAX_POSITION_EXCEDED
+//ERROR_INVALID_SPEED
 #define ERROR_UNEXPECTED              (255u)
 
 

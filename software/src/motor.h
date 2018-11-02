@@ -3,38 +3,53 @@
 
 #include "Arduino.h"
 
-//direction
-#define MOTOR_MOVE_REVERSE 0u
-#define MOTOR_MOVE_FORWARD 1u
 
-#define MOTOR_END 0
+// direction of the motors
+#define MOTOR_DIRECTION_REVERSE 0u    // reverse means, move motor in home direction
+#define MOTOR_DIRECTION_FORWARD 1u    // forward means, move motor against home direction
+#define AXIS_ENDSTOP_REACHED    0u    // return value of digitalRead() function when end stop is reached
+
+#define ACCELERATION_DISABLED   0u
+#define ACCELERATION_ENABLED    1u
+
+
+
 
 class Motor
 {
   private:
-    // Private variables
-    const uint8_t DIR_PIN;
-    const uint8_t STEP_PIN;
-    const uint8_t ENDSTOP_PIN;
+    // private variables
+    const uint8_t DIR_PIN;      // direction pin of the motor
+    const uint8_t STEP_PIN;     // step pin of the motor
+    const uint8_t ENDSTOP_PIN;  // endstop signal pin
 
-    //uint8_t direction;      // only 2 directions are possible
+    uint16_t AXIS_MAX_POSITION; // maximum possible logical axis position
+
     uint8_t stepState;      // motor is stepping at a transition from false to true or otherwise
+    float position;         // logical axis position measured in mm, by default is 0 when machine starts
     uint16_t speed;         // motor moving speed (mm/min)
-    bool endstop;           // if endstop is reached no further movemend in that direction is possible
 
-
-
-
-    // Private functions
+    // private functions
     Motor(); // constructor with no param not allowed
-  public:
-    // Private variables
-    float position;         // axis position measured in mm, by default is 0 when machine starts
 
+  public:
     // public functions
-    Motor(uint8_t dirPin, uint8_t stepPin, uint8_t endstopPin);
-    uint8_t step(uint8_t dir);
-    uint8_t setSpeed(uint16_t sp);
+    Motor(uint8_t dirPin, uint8_t stepPin, uint8_t endstopPin, uint16_t axisMaxPos);
+
+    void step(uint8_t direction);
+
+    void waitBetweenSteps(bool accelerationEnabled);
+
+    uint8_t setSpeed(uint16_t newSpeed);
+
+    float getPosition();
+
+    uint8_t setPosition(float newPosition);
+
+    void moveToHome(void);
 };
+
+
+
 
 #endif

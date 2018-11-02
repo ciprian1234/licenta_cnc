@@ -1,24 +1,31 @@
 #include "machine.h"
 #include "platform_config.h"
 
+
 Machine::Machine():
-  motor_x(PIN_MOTOR_X_DIR, PIN_MOTOR_X_STEP, PIN_ENDSTOP_X),
-  motor_y(PIN_MOTOR_Y_DIR, PIN_MOTOR_Y_STEP, PIN_ENDSTOP_Y),
-  motor_z(PIN_MOTOR_Z_DIR, PIN_MOTOR_Z_STEP, PIN_ENDSTOP_Z)
+  motor_x(PIN_MOTOR_X_DIR, PIN_MOTOR_X_STEP, PIN_ENDSTOP_X, AXIS_MAX_POSITION_X),
+  motor_y(PIN_MOTOR_Y_DIR, PIN_MOTOR_Y_STEP, PIN_ENDSTOP_Y, AXIS_MAX_POSITION_Y),
+  motor_z(PIN_MOTOR_Z_DIR, PIN_MOTOR_Z_STEP, PIN_ENDSTOP_Z, AXIS_MAX_POSITION_Z)
 {
   this->init();
 }
 
 
+
+
 void Machine::init()
 {
   memset(&this->homePoint, 0 , sizeof(Point_3d_t) );
-  memset(&this->machineState, 0, sizeof(MachineState_t) );
   memset(&this->machineMode, 0, sizeof(MachineMode_t) );
   memset(&this->currentCommand, 0, sizeof(MachineCommand_t) );
 
   this->machineMode.unit = COMMAND_UNIT_G21;  // set default unit to mm
   this->machineMode.positioning = COMMAND_POSITIONING_G90; // set default absolute mode positioning
+
+  // set axis logical position, maybe load from EEPROM position before previous reset
+  this->motor_x.setPosition(0);
+  this->motor_y.setPosition(0);
+  this->motor_z.setPosition(0);
 }
 
 
@@ -85,9 +92,12 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
           case 'X': this->currentCommand.moveFlags.x = true;  this->currentCommand.new_x = commandNumber; break;
           case 'Y': this->currentCommand.moveFlags.y = true;  this->currentCommand.new_y = commandNumber; break;
           case 'Z': this->currentCommand.moveFlags.z = true;  this->currentCommand.new_z = commandNumber; break;
-          case 'I': this->currentCommand.moveFlags.i = true;  this->currentCommand.new_i = commandNumber; break;;
-          case 'J': this->currentCommand.moveFlags.j = true;  this->currentCommand.new_j = commandNumber; break;;
-          case 'F': this->currentCommand.moveFlags.f = true;  this->currentCommand.new_f = commandNumber; break;;
+          case 'I': this->currentCommand.moveFlags.i = true;  this->currentCommand.new_i = commandNumber; break;
+          case 'J': this->currentCommand.moveFlags.j = true;  this->currentCommand.new_j = commandNumber; break;
+          case 'R': this->currentCommand.moveFlags.r = true;  this->currentCommand.new_r = commandNumber; break;
+          case 'F': this->currentCommand.moveFlags.f = true;  this->currentCommand.new_f = commandNumber; break;
+          case 'S': break;
+          case 'T': break;
           default: return ERROR_SYMBOL_NOT_SUPPORTED;
         } // end switch 2
     } // end switch 1
@@ -97,6 +107,8 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
   buffer.ready = false;
   return RETURN_SUCCES;
 }
+
+
 
 
 uint8_t Machine::executeMovementCommand()
@@ -114,10 +126,9 @@ uint8_t Machine::executeMovementCommand()
       {
         while(motor_x.position < currentCommand.new_x)
         {
-          motor_x.step(MOTOR_MOVE_FORWARD);
           // motor.setSpeed();
-          // motor.getStepDelay();
-          // delayMicroseconds(unsigned int us)
+          motor_x.step(MOTOR_MOVE_FORWARD);
+          motor_x.waitBetweenSteps(ACCELERATION_ENABLED);
         }
 
       }

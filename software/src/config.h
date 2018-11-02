@@ -1,37 +1,36 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-
 // Baud rate
 #define BAUD_RATE 9600u
+
 
 // Size of the buffer for recieved commands
 #define RX_BUFF_SIZE 128u
 
+
 // Max X axis (mm)
-#define MAX_X	200u
+#define AXIS_MAX_POSITION_X 200u
+
 
 // Max Y axis (mm)
-#define MAX_Y	200u
+#define AXIS_MAX_POSITION_Y 200u
+
 
 // Max Z axis (mm)
-#define MAX_Z 500u
+#define AXIS_MAX_POSITION_Z  50u
 
-// Maximum travel speed (mm/min)
-// default speed = RPM * AXIS_TRAVEL_DISTANCE_360
-#define MAX_TRAVEL_SPEED 1000u
-
-// Maximum drawing/cutting speed (mm/min)
-#define MAX_DRAWING_SPEED 400u
 
 // Number of steps per a complete 360 rotation of stepper motor
 #define NUMBER_OF_STEPS_360 200u
 
+
 // Number of milimeters a axis travels when an 360 rotation is complete
 #define AXIS_TRAVEL_DISTANCE_360 8u
 
-// Stepping resolution between motor steps, measured in mm
-#define STEP_RESOLUTION (((float)AXIS_TRAVEL_DISTANCE_360 / (float)NUMBER_OF_STEPS_360))
 
+// SPEED = RPM * AXIS_TRAVEL_DISTANCE_360
+#define MIN_MOTOR_RPM     (1u)    // minimum motor rotations per minute
+#define MAX_MOTOR_RPM   (255u)    // maximum motor rotations per minute
 
 #endif
