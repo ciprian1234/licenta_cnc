@@ -22,7 +22,7 @@
 
 
 // Number of steps per a complete 360 rotation of stepper motor
-#define NUMBER_OF_STEPS_360 200u
+#define NUMBER_OF_STEPS_360 800u
 
 
 // Number of milimeters a axis travels when an 360 rotation is complete

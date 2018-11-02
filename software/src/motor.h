@@ -1,7 +1,7 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-#include "Arduino.h"
+#include <Arduino.h>
 
 
 // direction of the motors
@@ -24,8 +24,6 @@ class Motor
     const uint8_t ENDSTOP_PIN;  // endstop signal pin
 
     uint16_t AXIS_MAX_POSITION; // maximum possible logical axis position
-
-    uint8_t stepState;      // motor is stepping at a transition from false to true or otherwise
     float position;         // logical axis position measured in mm, by default is 0 when machine starts
     uint16_t speed;         // motor moving speed (mm/min)
 

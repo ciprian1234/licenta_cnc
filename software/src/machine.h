@@ -48,7 +48,7 @@ typedef struct
   //uint8_t code;   // command code number
   float new_x, new_y, new_z; // new x y z position for 3d printer
   float new_i, new_j, new_r;  // for arc movement radius distance.
-  uint16 new_f;    // new feed rate speed (mm/min)
+  uint16_t new_f;    // new feed rate speed (mm/min)
 
   union {
     uint8_t all;
@@ -78,6 +78,7 @@ public:
   void init();
   uint8_t parseLine(Rx_buffer_t& buffer);
   uint8_t executeMovementCommand();
+  uint8_t setMotorsSpeed( uint16_t newSpeed);
 };
 
 

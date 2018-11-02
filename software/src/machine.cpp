@@ -26,6 +26,8 @@ void Machine::init()
   this->motor_x.setPosition(0);
   this->motor_y.setPosition(0);
   this->motor_z.setPosition(0);
+  pinMode(PIN_ENABLE_MOTORS, OUTPUT);
+  digitalWrite(PIN_ENABLE_MOTORS, LOW);
 }
 
 
@@ -116,19 +118,31 @@ uint8_t Machine::executeMovementCommand()
 
   if(!this->currentCommand.moveFlags.all) { return RETURN_SUCCES; } // no movement requested
 
-  if(true == this->currentCommand.moveFlags.x) {}
+  // set motors speed
+  if(this->currentCommand.moveFlags.f) { this->setMotorsSpeed(this->currentCommand.new_f);  }
+
+  //if(true == this->currentCommand.moveFlags.x) {}
 
   switch(this->machineMode.movement)
   {
     case COMMAND_MOVEMENT_G00:
       //move first z then x then z
+
       if( true == this->currentCommand.moveFlags.x)
       {
-        while(motor_x.position < currentCommand.new_x)
+        if(motor_x.getPosition() < currentCommand.new_x )  // MOVE FORWARD
         {
-          // motor.setSpeed();
-          motor_x.step(MOTOR_MOVE_FORWARD);
-          motor_x.waitBetweenSteps(ACCELERATION_ENABLED);
+          uint16_t i = 0;
+          while(motor_x.getPosition() < currentCommand.new_x) { i++; motor_x.step(MOTOR_DIRECTION_FORWARD); }
+          Serial.print("[steps: "); Serial.print(i); Serial.print("]\n");
+          Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print("}\n");
+        }
+        else if( motor_x.getPosition() > currentCommand.new_x )  // MOVE REVERSE
+        {
+          uint16_t i = 0;
+          while(motor_x.getPosition() > currentCommand.new_x) { i++; motor_x.step(MOTOR_DIRECTION_REVERSE); }
+          Serial.print("[steps: "); Serial.print(i); Serial.print("]\n");
+          Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print("}\n");
         }
 
       }
@@ -145,5 +159,16 @@ uint8_t Machine::executeMovementCommand()
 
   // reset current command data
   memset(&this->currentCommand, 0, sizeof(MachineCommand_t) );
+  return RETURN_SUCCES;
+}
+
+
+
+
+uint8_t Machine::setMotorsSpeed( uint16_t newSpeed)
+{
+  motor_x.setSpeed(newSpeed);
+  motor_y.setSpeed(newSpeed);
+  motor_z.setSpeed(newSpeed);
   return RETURN_SUCCES;
 }

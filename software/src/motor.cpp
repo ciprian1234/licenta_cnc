@@ -5,10 +5,10 @@
 #define ONE_SENOND_IN_MICROSECONDS  (1000000u)
 
 #define AXIS_MIN_SPEED  (MIN_MOTOR_RPM * AXIS_TRAVEL_DISTANCE_360)
-#define AXIS_MIN_SPEED  (MAX_MOTOR_RPM * AXIS_TRAVEL_DISTANCE_360)
+#define AXIS_MAX_SPEED  (MAX_MOTOR_RPM * AXIS_TRAVEL_DISTANCE_360)
 
 // Stepping resolution between motor steps, measured in mm
-#define STEP_RESOLUTION (((float)AXIS_TRAVEL_DISTANCE_360 / (float)NUMBER_OF_STEPS_360))
+#define STEP_RESOLUTION ( ((float)AXIS_TRAVEL_DISTANCE_360 / (float)NUMBER_OF_STEPS_360) )
 
 
 // Utility function used to set a delay in microseconds
@@ -27,11 +27,8 @@ Motor::Motor(uint8_t dirPin, uint8_t stepPin, uint8_t endstopPin, uint16_t axisM
   pinMode(this->ENDSTOP_PIN, INPUT_PULLUP);
 
   this->AXIS_MAX_POSITION = axisMaxPos;
-  this->stepState = 0u;
   this->position = 0;
-
-  digitalWrite(DIR_PIN, 0u);
-  digitalWrite(STEP_PIN, stepState);
+  this->speed = 500;
 }
 
 
@@ -44,7 +41,7 @@ void Motor::step(uint8_t direction)
   {
     Serial.println("cnc>>>warning: axis reached reverse ending!"); return;
   }
-  if((MOTOR_DIRECTION_FORWARD == direction) && (this->position >= AXIS_MAX_POSITION)
+  if((MOTOR_DIRECTION_FORWARD == direction) && (this->position >= AXIS_MAX_POSITION) )
   {
     Serial.println("cnc>>>warning: axis reached forward ending!"); return;
   }
@@ -52,11 +49,12 @@ void Motor::step(uint8_t direction)
   // Continue if limits were not reached
 
   // change direction
-  digitalWrite(this->DIR_PIN, dir);
+  digitalWrite(this->DIR_PIN, direction);
 
   // perform step
-  this->stepState = !this->stepState;
-  digitalWrite(this->STEP_PIN, this->stepState);
+  digitalWrite(this->STEP_PIN, LOW);
+  this->waitBetweenSteps(ACCELERATION_ENABLED);
+  digitalWrite(this->STEP_PIN, HIGH);
 
   // update position
   if ( direction == MOTOR_DIRECTION_REVERSE)    { this->position -= STEP_RESOLUTION; }
@@ -83,10 +81,10 @@ void Motor::waitBetweenSteps(bool accelerationEnabled)
 
   // How many steps are required to travel at specified RPM?
   // STEPS_PER_MINUTE = RPM * NUMBER_OF_STEPS_360
-  uin16_t stepsPerSecond = RPS * NUMBER_OF_STEPS_360
+  uint16_t stepsPerSecond = RPS * NUMBER_OF_STEPS_360;
 
   // What delay between steps is required to travel at specified
-  uint16_t speedDelay = (uint16_t)(ONE_SENOND_IN_MICROSECONDS / stepsPerSecond)
+  uint16_t speedDelay = (uint16_t)(ONE_SENOND_IN_MICROSECONDS / stepsPerSecond);
 
   // STEP_RESOLUTION = AXIS_TRAVEL_DISTANCE_360 / NUMBER_OF_STEPS_360
   // STEPS_PER_MINUTE = SPEED / STEP_RESOLUTION
@@ -113,13 +111,10 @@ void Motor::waitBetweenSteps(bool accelerationEnabled)
 
 uint8_t Motor::setSpeed(uint16_t newSpeed)
 {
-  if( (newSpeed < AXIS_MIN_SPEED) || newSpeed > AXIS_MAX_SPEED )
-  {
-    return ERROR_INVALID_SPEED;
-  }
-
+  if( (newSpeed < AXIS_MIN_SPEED) || newSpeed > AXIS_MAX_SPEED ) { return ERROR_INVALID_MOTOR_SPEED; }
+  this->speed = newSpeed;
+  return RETURN_SUCCES;
 }
-
 
 
 
@@ -137,6 +132,7 @@ uint8_t Motor::setPosition(float newPosition)
 {
   if(newPosition > this->AXIS_MAX_POSITION) { return ERROR_AXIS_MAX_POSITION_EXCEDED; }
   this->position = newPosition;
+  return RETURN_SUCCES;
 }
 
 
@@ -164,7 +160,7 @@ void Motor::moveToHome(void)
 
 
 
-void delay_sync(int32_t us)
+void delay_sync(uint32_t us)
 {
   do {
     if(us < 2) { return; }  // delayMicroseconds - cant handle delays lower then 2us
