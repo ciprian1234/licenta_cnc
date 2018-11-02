@@ -3,10 +3,10 @@
 
 
 // Baud rate
-#define BAUD_RATE     9600u
+#define BAUD_RATE 9600u
 
 // Size of the buffer for recieved commands
-#define RX_BUFF_SIZE  128u
+#define RX_BUFF_SIZE 128u
 
 // Max X axis (mm)
 #define MAX_X	200u

@@ -104,14 +104,23 @@ uint8_t Machine::executeMovementCommand()
 
   if(!this->currentCommand.moveFlags.all) { return RETURN_SUCCES; } // no movement requested
 
+  if(true == this->currentCommand.moveFlags.x) {}
+
   switch(this->machineMode.movement)
   {
     case COMMAND_MOVEMENT_G00:
-      // TODO:
-
       //move first z then x then z
       if( true == this->currentCommand.moveFlags.x)
+      {
+        while(motor_x.position < currentCommand.new_x)
+        {
+          motor_x.step(MOTOR_MOVE_FORWARD);
+          // motor.setSpeed();
+          // motor.getStepDelay();
+          // delayMicroseconds(unsigned int us)
+        }
 
+      }
       break;
     case COMMAND_MOVEMENT_G01:
       break;
@@ -123,6 +132,7 @@ uint8_t Machine::executeMovementCommand()
       return ERROR_UNEXPECTED;
   }
 
-  // TODO: reset currentCommand
+  // reset current command data
+  memset(&this->currentCommand, 0, sizeof(MachineCommand_t) );
   return RETURN_SUCCES;
 }

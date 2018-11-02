@@ -1,0 +1,37 @@
+// INPUT:
+      // AXIS_TRAVEL_DISTANCE_360 = 8mm
+      // SPEED    = 1000 (mm/min)
+      // SPEED_s  = SPEED / 60 = 16.6 (mm/s)
+
+      // SPEED = RPM * AXIS_TRAVEL_DISTANCE_360
+      // RPM = SPEED / AXIS_TRAVEL_DISTANCE_360
+      // RPS = RPM / 60
+
+
+      // How many steps are required to travel at specified RPM?
+      // STEPS_PER_MINUTE = RPM * NUMBER_OF_STEPS_360
+
+      // How many steps are required to travel at specified RPM?
+      // STEPS_PER_SECOND = STEPS_PER_MINUTE / 60
+
+      // What delay between steps is required to travel at specified
+      // delay = 1000 ms / STEPS_PER_SECOND
+
+      // NUMBER_OF_STEPS_360 = 200
+      // STEP_RESOLUTION = AXIS_TRAVEL_DISTANCE_360 / NUMBER_OF_STEPS_360
+      // STEPS_PER_MINUTE = SPEED / STEP_RESOLUTION
+      // STEPS_PER_SECOND =  (SPEED / STEP_RESOLUTION) / 60
+      // delayMicroseconds = 1.000.000 / STEPS_PER_SECOND
+
+
+
+ // INPUT: 	speed (mm/min)
+ // OUTPUT:	delay in microseconds between steps to reach input speed
+
+ AXIS_TRAVEL_DISTANCE_360 = 8mm
+ NUMBER_OF_STEPS_360 = 200
+
+STEP_RESOLUTION = AXIS_TRAVEL_DISTANCE_360 / NUMBER_OF_STEPS_360
+
+STEPS_PER_SECOND = (speed / STEP_RESOLUTION) / 60
+delay = 1.000.000 / STEPS_PER_SECOND
