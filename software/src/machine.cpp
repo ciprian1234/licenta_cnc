@@ -15,7 +15,6 @@ Machine::Machine():
 
 void Machine::init()
 {
-  memset(&this->homePoint, 0 , sizeof(Point_3d_t) );
   memset(&this->machineMode, 0, sizeof(MachineMode_t) );
   memset(&this->newCmd, 0, sizeof(MachineCommand_t) );
 
@@ -67,15 +66,16 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
         // handle G type commands
         switch(integerPart)
         {
-          case COMMAND_MOVEMENT_G00:    machineMode.movement = COMMAND_MOVEMENT_G00; break;
-          case COMMAND_MOVEMENT_G01:    machineMode.movement = COMMAND_MOVEMENT_G01; break;
-          case COMMAND_MOVEMENT_G02:    machineMode.movement = COMMAND_MOVEMENT_G02; break;
-          case COMMAND_MOVEMENT_G03:    machineMode.movement = COMMAND_MOVEMENT_G03; break;
-          case COMMAND_G28:             /* TODO: implement go to home */ break;
+          case COMMAND_MOVEMENT_G00:    this->machineMode.movement = COMMAND_MOVEMENT_G00; break;
+          case COMMAND_MOVEMENT_G01:    this->machineMode.movement = COMMAND_MOVEMENT_G01; break;
+          case COMMAND_MOVEMENT_G02:    this->machineMode.movement = COMMAND_MOVEMENT_G02; break;
+          case COMMAND_MOVEMENT_G03:    this->machineMode.movement = COMMAND_MOVEMENT_G03; break;
+          case COMMAND_HOME_G28:        motor_z.moveToHome(); motor_x.moveToHome(); motor_y.moveToHome(); break;
           case COMMAND_UNIT_G20:        this->machineMode.unit = COMMAND_UNIT_G20; break;
           case COMMAND_UNIT_G21:        this->machineMode.unit = COMMAND_UNIT_G21; break;
           case COMMAND_POSITIONING_G90: this->machineMode.positioning = COMMAND_POSITIONING_G90; break;
           case COMMAND_POSITIONING_G91: this->machineMode.positioning = COMMAND_POSITIONING_G91; break;
+          case COMMAND_OFFSET_G92:      motor_x.setPosition(0.0); motor_y.setPosition(0.0); motor_z.setPosition(0.0); break;
           default: return ERROR_COMMAND_NOT_SUPPORTED;
         }
         break;

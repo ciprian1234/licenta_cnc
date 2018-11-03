@@ -4,23 +4,23 @@
 #include "system.h"
 #include "motor.h"
 
-#define COMMAND_TYPE_G        0U
-#define COMMAND_TYPE_M        1U
-#define COMMAND_TYPE_SPECIAL  2U
+#define COMMAND_TYPE_G            0u
+#define COMMAND_TYPE_M            1u
+#define COMMAND_TYPE_SPECIAL      2U
 
-#define COMMAND_MOVEMENT_G00    0U // secvential linear move [DEFAULT]
-#define COMMAND_MOVEMENT_G01    1U // linear move
-#define COMMAND_MOVEMENT_G02    2U // arc move clockwise
-#define COMMAND_MOVEMENT_G03    3U // arc move counter clockwise
+#define COMMAND_MOVEMENT_G00      0u // secvential linear move [DEFAULT]
+#define COMMAND_MOVEMENT_G01      1u // linear move
+#define COMMAND_MOVEMENT_G02      2u // arc move clockwise
+#define COMMAND_MOVEMENT_G03      3U // arc move counter clockwise
 
-#define COMMAND_UNIT_G20        20U // set measurement unit in inches
-#define COMMAND_UNIT_G21        21U // set measurement unit in mm
+#define COMMAND_UNIT_G20          20u // set measurement unit in inches
+#define COMMAND_UNIT_G21          21u // set measurement unit in mm
 
-#define COMMAND_POSITIONING_G90   90U // abosolute positioning [DEFAULT]
-#define COMMAND_POSITIONING_G91   91U // incremental position
+#define COMMAND_POSITIONING_G90   90u // abosolute positioning [DEFAULT]
+#define COMMAND_POSITIONING_G91   91u // incremental position
 
-#define COMMAND_G28   28U   // move to home
-
+#define COMMAND_HOME_G28          28u   // move to home
+#define COMMAND_OFFSET_G92        92u   // set home offset
 
 
 
@@ -64,7 +64,6 @@ class Machine
 {
 private:
   // private variables
-  Point_3d_t homePoint;
   MachineMode_t machineMode;
   MachineCommand_t newCmd;
   Motor motor_x;

@@ -145,14 +145,12 @@ void Motor::moveToHome(void)
   while( AXIS_ENDSTOP_REACHED != digitalRead(this->ENDSTOP_PIN) )
   {
     this->step(MOTOR_DIRECTION_REVERSE);
-    this->waitBetweenSteps(ACCELERATION_ENABLED);
   }
 
   // 2. then move motor forward while endstop is pressed
   while( AXIS_ENDSTOP_REACHED == digitalRead(this->ENDSTOP_PIN) )
   {
     this->step(MOTOR_DIRECTION_FORWARD);
-    this->waitBetweenSteps(ACCELERATION_ENABLED);
   }
 
   this->setPosition(0.0);
