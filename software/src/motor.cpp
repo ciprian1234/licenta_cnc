@@ -34,16 +34,16 @@ Motor::Motor(uint8_t dirPin, uint8_t stepPin, uint8_t endstopPin, uint16_t axisM
 
 
 
-void Motor::step(uint8_t direction)
+bool Motor::step(uint8_t direction)
 {
   bool endstop = digitalRead(this->ENDSTOP_PIN);
   if((MOTOR_DIRECTION_REVERSE == direction) && (AXIS_ENDSTOP_REACHED == endstop) )
   {
-    Serial.println("cnc>>>warning: axis reached reverse ending!"); return;
+    Serial.println("cnc>>>warning: axis reached reverse ending!"); return false;
   }
   if((MOTOR_DIRECTION_FORWARD == direction) && (this->position >= AXIS_MAX_POSITION) )
   {
-    Serial.println("cnc>>>warning: axis reached forward ending!"); return;
+    Serial.println("cnc>>>warning: axis reached forward ending!"); return false;
   }
 
   // Continue if limits were not reached
@@ -60,6 +60,7 @@ void Motor::step(uint8_t direction)
   if ( direction == MOTOR_DIRECTION_REVERSE)    { this->position -= STEP_RESOLUTION; }
   else if(direction == MOTOR_DIRECTION_FORWARD) { this->position += STEP_RESOLUTION; }
   else { /* this is reached only if direction is invalid */ }
+  return true;
 }
 
 

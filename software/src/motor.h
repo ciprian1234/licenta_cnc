@@ -34,7 +34,7 @@ class Motor
     // public functions
     Motor(uint8_t dirPin, uint8_t stepPin, uint8_t endstopPin, uint16_t axisMaxPos);
 
-    void step(uint8_t direction);
+    bool step(uint8_t direction);
 
     void waitBetweenSteps(bool accelerationEnabled);
 

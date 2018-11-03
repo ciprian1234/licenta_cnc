@@ -28,6 +28,7 @@ void Machine::init()
   this->motor_z.setPosition(0);
   pinMode(PIN_ENABLE_MOTORS, OUTPUT);
   digitalWrite(PIN_ENABLE_MOTORS, LOW);
+  // TODO: set drivers in sleep mode - set sleep pin to LOW
 }
 
 
@@ -130,20 +131,18 @@ uint8_t Machine::executeMovementCommand()
 
       if( true == this->currentCommand.moveFlags.x)
       {
+        uint16_t steps = 0;
         if(motor_x.getPosition() < currentCommand.new_x )  // MOVE FORWARD
         {
-          uint16_t i = 0;
-          while(motor_x.getPosition() < currentCommand.new_x) { i++; motor_x.step(MOTOR_DIRECTION_FORWARD); }
-          Serial.print("[steps: "); Serial.print(i); Serial.print("]\n");
-          Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print("}\n");
+          while(motor_x.getPosition() < currentCommand.new_x) { if(!motor_x.step(MOTOR_DIRECTION_FORWARD)) {break;} steps++;}
         }
         else if( motor_x.getPosition() > currentCommand.new_x )  // MOVE REVERSE
         {
-          uint16_t i = 0;
-          while(motor_x.getPosition() > currentCommand.new_x) { i++; motor_x.step(MOTOR_DIRECTION_REVERSE); }
-          Serial.print("[steps: "); Serial.print(i); Serial.print("]\n");
-          Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print("}\n");
+          while(motor_x.getPosition() > currentCommand.new_x) { if(!motor_x.step(MOTOR_DIRECTION_REVERSE)) {break;} steps++;}
         }
+
+        Serial.print("[steps: "); Serial.print(steps); Serial.print("]\n");
+        Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print("}\n");
 
       }
       break;
