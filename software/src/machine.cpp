@@ -17,7 +17,7 @@ void Machine::init()
 {
   memset(&this->homePoint, 0 , sizeof(Point_3d_t) );
   memset(&this->machineMode, 0, sizeof(MachineMode_t) );
-  memset(&this->currentCommand, 0, sizeof(MachineCommand_t) );
+  memset(&this->newCmd, 0, sizeof(MachineCommand_t) );
 
   this->machineMode.unit = COMMAND_UNIT_G21;  // set default unit to mm
   this->machineMode.positioning = COMMAND_POSITIONING_G90; // set default absolute mode positioning
@@ -95,20 +95,30 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 
       default:
         // hanndle command parameters
-        //bool abs = (this->machineMode.positioning == COMMAND_POSITIONING_G90) ? true : false;  // check aboslute or relativ positioning
         switch(commandSymbol)
         {
           case 'X':
-            this->currentCommand.moveFlags.x = true;
-            if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->currentCommand.new_x = commandNumber; }
-            else { this->currentCommand.new_x = commandNumber + motor_x.getPosition(); }
+            this->newCmd.flags.x = true;
+            if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->newCmd.x = commandNumber; } // absolute positioning
+            else { this->newCmd.x = commandNumber + motor_x.getPosition(); } // relative positioning
             break;
-          case 'Y': this->currentCommand.moveFlags.y = true; /* TODO: abs?incr*/ this->currentCommand.new_y = commandNumber; break;
-          case 'Z': this->currentCommand.moveFlags.z = true; /* TODO: abs?incr*/ this->currentCommand.new_z = commandNumber; break;
-          case 'I': this->currentCommand.moveFlags.i = true;  this->currentCommand.new_i = commandNumber; break;
-          case 'J': this->currentCommand.moveFlags.j = true;  this->currentCommand.new_j = commandNumber; break;
-          case 'R': this->currentCommand.moveFlags.r = true;  this->currentCommand.new_r = commandNumber; break;
-          case 'F': this->currentCommand.moveFlags.f = true;  this->currentCommand.new_f = commandNumber; break;
+
+          case 'Y':
+            this->newCmd.flags.y = true;
+            if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->newCmd.y = commandNumber; } // absolute positioning
+            else { this->newCmd.y = commandNumber + motor_y.getPosition(); } // relative positioning
+            break;
+
+          case 'Z':
+            this->newCmd.flags.z = true;
+            if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->newCmd.z = commandNumber; } // absolute positioning
+            else { this->newCmd.z = commandNumber + motor_z.getPosition(); } // relative positioning
+            break;
+
+          case 'I': this->newCmd.flags.i = true;  this->newCmd.i = commandNumber; break;
+          case 'J': this->newCmd.flags.j = true;  this->newCmd.j = commandNumber; break;
+          case 'R': this->newCmd.flags.r = true;  this->newCmd.r = commandNumber; break;
+          case 'F': this->newCmd.flags.f = true;  this->newCmd.f = commandNumber; break;
           case 'S': break;
           case 'T': break;
           default: return ERROR_SYMBOL_NOT_SUPPORTED;
@@ -127,17 +137,17 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 uint8_t Machine::executeMovementCommand()
 {
 
-  if(!this->currentCommand.moveFlags.all) { return RETURN_SUCCES; } // no movement requested
+  if(!this->newCmd.flags.all) { return RETURN_SUCCES; } // no movement requested
 
   // set motors speed
-  if(this->currentCommand.moveFlags.f) { this->setMotorsSpeed(this->currentCommand.new_f);  }
+  if(this->newCmd.flags.f) { this->setMotorsSpeed(this->newCmd.f);  }
 
   switch(this->machineMode.movement)
   {
     case COMMAND_MOVEMENT_G00:
-      if(this->currentCommand.moveFlags.x) { performAxisLinearMovement_G00(motor_x, this->currentCommand.new_x); }
-      if(this->currentCommand.moveFlags.y) { performAxisLinearMovement_G00(motor_y, this->currentCommand.new_y); }
-      if(this->currentCommand.moveFlags.z) { performAxisLinearMovement_G00(motor_z, this->currentCommand.new_z); }
+      if(this->newCmd.flags.x) { performAxisLinearMovement_G00(motor_x, this->newCmd.x); }
+      if(this->newCmd.flags.y) { performAxisLinearMovement_G00(motor_y, this->newCmd.y); }
+      if(this->newCmd.flags.z) { performAxisLinearMovement_G00(motor_z, this->newCmd.z); }
       Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print(", ");
       Serial.print("Y: "); Serial.print(motor_y.getPosition()); Serial.print(", ");
       Serial.print("Z: "); Serial.print(motor_z.getPosition()); Serial.print("}\n");
@@ -153,7 +163,7 @@ uint8_t Machine::executeMovementCommand()
   }
 
   // reset current command data
-  memset(&this->currentCommand, 0, sizeof(MachineCommand_t) );
+  memset(&this->newCmd, 0, sizeof(MachineCommand_t) );
   return RETURN_SUCCES;
 }
 

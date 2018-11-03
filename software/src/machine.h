@@ -46,14 +46,14 @@ typedef struct
 {
   //uint8_t type;   // could either be COMMAND_TYPE_G, COMMAND_TYPE_M, or COMMAND_TYPE_SPECIAL
   //uint8_t code;   // command code number
-  float new_x, new_y, new_z; // new x y z position for 3d printer
-  float new_i, new_j, new_r;  // for arc movement radius distance.
-  uint16_t new_f;    // new feed rate speed (mm/min)
+  float x, y, z; // new x y z position for 3d printer
+  float i, j, r;  // for arc movement radius distance.
+  uint16_t f;    // new feed rate speed (mm/min)
 
   union {
     uint8_t all;
     struct { uint8_t x:1, y:1, z:1, i:1, j:1, r:1, f:1; };
-  }moveFlags; // movement flags
+  }flags; // movement flags
 
 }MachineCommand_t;
 
@@ -66,7 +66,7 @@ private:
   // private variables
   Point_3d_t homePoint;
   MachineMode_t machineMode;
-  MachineCommand_t currentCommand;
+  MachineCommand_t newCmd;
   Motor motor_x;
   Motor motor_y;
   Motor motor_z;
