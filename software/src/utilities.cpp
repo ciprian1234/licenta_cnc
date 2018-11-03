@@ -65,9 +65,6 @@ uint8_t parseNumber(Rx_buffer_t& buffer, float& outputNumber)
   numberStr[pos] = 0; // append null to the end
   if(pos == 0 ) { return ERROR_INVALID_NUMBER_FORMAT; }
 
-  // DEBUG
-  Serial.print("2.EXTRACTION: {{"); Serial.print(numberStr); Serial.print("}}\n");
-
   outputNumber = atof(numberStr);
   return RETURN_SUCCES;
 }

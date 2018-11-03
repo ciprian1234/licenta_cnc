@@ -79,6 +79,7 @@ public:
   uint8_t parseLine(Rx_buffer_t& buffer);
   uint8_t executeMovementCommand();
   uint8_t setMotorsSpeed( uint16_t newSpeed);
+  uint8_t performAxisLinearMovement_G00(Motor& inputMotor, float newAxisPosition);
 };
 
 

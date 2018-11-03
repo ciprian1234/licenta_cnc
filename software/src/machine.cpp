@@ -56,10 +56,10 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
     integerPart = (int16_t)commandNumber;
 
     // DEBUG
-    Serial.print("3.PARSING:\n");
-    Serial.print("CommandSymbol: ["); Serial.print(commandSymbol);  Serial.print("]\n");
-    Serial.print("CommandNumber: ["); Serial.print(commandNumber);  Serial.print("]\n");
-    Serial.print("IntegerPart: [");   Serial.print(integerPart);    Serial.print("]\n\n");
+    Serial.print("[PARSER: ");
+    Serial.print("Symbol: "); Serial.print(commandSymbol);  Serial.print("  ");
+    Serial.print("Number: "); Serial.print(commandNumber);  Serial.print("]\n");
+    //Serial.print("CommandNumber: ["); Serial.print(commandNumber);  Serial.print("]\n");
 
     switch(commandSymbol)
     {
@@ -75,13 +75,18 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
           case COMMAND_UNIT_G20:        this->machineMode.unit = COMMAND_UNIT_G20; break;
           case COMMAND_UNIT_G21:        this->machineMode.unit = COMMAND_UNIT_G21; break;
           case COMMAND_POSITIONING_G90: this->machineMode.positioning = COMMAND_POSITIONING_G90; break;
-          case COMMAND_POSITIONING_G91: this->machineMode.positioning = COMMAND_POSITIONING_G90; break;
+          case COMMAND_POSITIONING_G91: this->machineMode.positioning = COMMAND_POSITIONING_G91; break;
           default: return ERROR_COMMAND_NOT_SUPPORTED;
         }
         break;
 
       case 'M':
-        // TODO: implement M commands
+      switch(integerPart)
+      {
+        case 17: digitalWrite(PIN_ENABLE_MOTORS, LOW);  break;
+        case 18: digitalWrite(PIN_ENABLE_MOTORS, HIGH); break;
+        default: return ERROR_COMMAND_NOT_SUPPORTED;
+      }
         break;
 
       case '#':
@@ -90,11 +95,16 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 
       default:
         // hanndle command parameters
+        //bool abs = (this->machineMode.positioning == COMMAND_POSITIONING_G90) ? true : false;  // check aboslute or relativ positioning
         switch(commandSymbol)
         {
-          case 'X': this->currentCommand.moveFlags.x = true;  this->currentCommand.new_x = commandNumber; break;
-          case 'Y': this->currentCommand.moveFlags.y = true;  this->currentCommand.new_y = commandNumber; break;
-          case 'Z': this->currentCommand.moveFlags.z = true;  this->currentCommand.new_z = commandNumber; break;
+          case 'X':
+            this->currentCommand.moveFlags.x = true;
+            if(this->machineMode.positioning == COMMAND_POSITIONING_G90) { this->currentCommand.new_x = commandNumber; }
+            else { this->currentCommand.new_x = commandNumber + motor_x.getPosition(); }
+            break;
+          case 'Y': this->currentCommand.moveFlags.y = true; /* TODO: abs?incr*/ this->currentCommand.new_y = commandNumber; break;
+          case 'Z': this->currentCommand.moveFlags.z = true; /* TODO: abs?incr*/ this->currentCommand.new_z = commandNumber; break;
           case 'I': this->currentCommand.moveFlags.i = true;  this->currentCommand.new_i = commandNumber; break;
           case 'J': this->currentCommand.moveFlags.j = true;  this->currentCommand.new_j = commandNumber; break;
           case 'R': this->currentCommand.moveFlags.r = true;  this->currentCommand.new_r = commandNumber; break;
@@ -122,29 +132,15 @@ uint8_t Machine::executeMovementCommand()
   // set motors speed
   if(this->currentCommand.moveFlags.f) { this->setMotorsSpeed(this->currentCommand.new_f);  }
 
-  //if(true == this->currentCommand.moveFlags.x) {}
-
   switch(this->machineMode.movement)
   {
     case COMMAND_MOVEMENT_G00:
-      //move first z then x then z
-
-      if( true == this->currentCommand.moveFlags.x)
-      {
-        uint16_t steps = 0;
-        if(motor_x.getPosition() < currentCommand.new_x )  // MOVE FORWARD
-        {
-          while(motor_x.getPosition() < currentCommand.new_x) { if(!motor_x.step(MOTOR_DIRECTION_FORWARD)) {break;} steps++;}
-        }
-        else if( motor_x.getPosition() > currentCommand.new_x )  // MOVE REVERSE
-        {
-          while(motor_x.getPosition() > currentCommand.new_x) { if(!motor_x.step(MOTOR_DIRECTION_REVERSE)) {break;} steps++;}
-        }
-
-        Serial.print("[steps: "); Serial.print(steps); Serial.print("]\n");
-        Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print("}\n");
-
-      }
+      if(this->currentCommand.moveFlags.x) { performAxisLinearMovement_G00(motor_x, this->currentCommand.new_x); }
+      if(this->currentCommand.moveFlags.y) { performAxisLinearMovement_G00(motor_y, this->currentCommand.new_y); }
+      if(this->currentCommand.moveFlags.z) { performAxisLinearMovement_G00(motor_z, this->currentCommand.new_z); }
+      Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print(", ");
+      Serial.print("Y: "); Serial.print(motor_y.getPosition()); Serial.print(", ");
+      Serial.print("Z: "); Serial.print(motor_z.getPosition()); Serial.print("}\n");
       break;
     case COMMAND_MOVEMENT_G01:
       break;
@@ -169,5 +165,24 @@ uint8_t Machine::setMotorsSpeed( uint16_t newSpeed)
   motor_x.setSpeed(newSpeed);
   motor_y.setSpeed(newSpeed);
   motor_z.setSpeed(newSpeed);
+  return RETURN_SUCCES;
+}
+
+
+
+
+uint8_t Machine::performAxisLinearMovement_G00(Motor& inputMotor, float newAxisPosition)
+{
+  // TODO: implement relative positioning and ends checking
+  uint16_t steps = 0;
+  if(inputMotor.getPosition() < newAxisPosition)  // MOVE FORWARD
+  {
+    while(inputMotor.getPosition() < newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_FORWARD)) {break;} steps++;}
+  }
+  else if(inputMotor.getPosition() > newAxisPosition)  // MOVE REVERSE
+  {
+    while(inputMotor.getPosition() > newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_REVERSE)) {break;} steps++;}
+  }
+  Serial.print("[steps: "); Serial.print(steps); Serial.print("]\n");
   return RETURN_SUCCES;
 }
