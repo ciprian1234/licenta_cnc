@@ -23,7 +23,7 @@ Motor::Motor(uint8_t dirPin, uint8_t stepPin, uint8_t endstopPin, uint16_t axisM
   pinMode(this->ENDSTOP_PIN, INPUT_PULLUP);
 
   this->AXIS_MAX_POSITION = axisMaxPos;
-  this->position = 0;
+  this->steps = 0;
   this->speed = 500;
 }
 
@@ -37,7 +37,7 @@ bool Motor::step(uint8_t direction)
   {
     Serial.println("cnc>>>warning: axis reached reverse ending!"); return false;
   }
-  if((MOTOR_DIRECTION_FORWARD == direction) && (this->position >= AXIS_MAX_POSITION) )
+  if((MOTOR_DIRECTION_FORWARD == direction) && (this->getPosition() >= AXIS_MAX_POSITION) )
   {
     Serial.println("cnc>>>warning: axis reached forward ending!"); return false;
   }
@@ -53,8 +53,8 @@ bool Motor::step(uint8_t direction)
   digitalWrite(this->STEP_PIN, HIGH);
 
   // update position
-  if ( direction == MOTOR_DIRECTION_REVERSE)    { this->position -= STEP_RESOLUTION; }
-  else if(direction == MOTOR_DIRECTION_FORWARD) { this->position += STEP_RESOLUTION; }
+  if ( direction == MOTOR_DIRECTION_REVERSE)    { this->steps -= 1; }
+  else if(direction == MOTOR_DIRECTION_FORWARD) { this->steps += 1; }
   else { /* this is reached only if direction is invalid */ }
   return true;
 }
@@ -118,7 +118,7 @@ uint8_t Motor::setSpeed(uint16_t newSpeed)
 
 float Motor::getPosition()
 {
-  return this->position;
+  return this->steps * STEP_RESOLUTION;
 }
 
 
@@ -128,7 +128,7 @@ float Motor::getPosition()
 uint8_t Motor::setPosition(float newPosition)
 {
   if(newPosition > this->AXIS_MAX_POSITION) { return ERROR_AXIS_MAX_POSITION_EXCEDED; }
-  this->position = newPosition;
+  this->steps = (int32_t)newPosition / STEP_RESOLUTION;
   return RETURN_SUCCES;
 }
 
