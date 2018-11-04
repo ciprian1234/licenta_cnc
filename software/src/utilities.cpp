@@ -107,6 +107,6 @@ static bool isNumericSymbol(char ch)
 // check if two float numbers are equal
 bool equals(float f1, float f2)
 {
-  if( (f1 >= (f2 - EPSILON)) && (f1 <= (f2 + EPSILON)) ) { return true;}
+  if( (f2 >= (f1 - EPSILON)) && (f2 <= (f1 + EPSILON)) ) { return true; }
   return false;
 }

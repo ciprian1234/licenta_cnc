@@ -213,57 +213,122 @@ uint8_t Machine::performAxisLinearMovement_G00(Motor& inputMotor, float newAxisP
 uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
 {
   Point_3d_t p0{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current position
-  Point_3d_t pn{0.0, 0.0, 0.0}; // intermediar point between p0 and p1 points
+  Point_3d_t p_new = p0;
   Point_3d_t stepRemainder{0.0, 0.0, 0.0};  // reaminder between 2 intermediar steps
 
   // calculate direction vector of the line between p0 and p1
   Point_3d_t directionVector{p1.x - p0.x,   p1.y - p0.y,  p1.z - p0.z};
 
   // calculate euclidian distance between po and p1
-  float EuclidianDistance = sqrt( pow(directionVector.x,2) + pow(directionVector.y, 2) + pow(directionVector.z, 2) );
+  float EuclidianDistance = sqrt( pow(directionVector.x, 2) + pow(directionVector.y, 2) + pow(directionVector.z, 2) );
   float interpolationResolution = STEP_RESOLUTION / EuclidianDistance;
 
   // compute motor directions
-  uint8_t direction_x = ( directionVector.x < 0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
-  uint8_t direction_y = ( directionVector.y < 0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
-  uint8_t direction_z = ( directionVector.z < 0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
+  uint8_t direction_x = ( directionVector.x < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
+  uint8_t direction_y = ( directionVector.y < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
+  uint8_t direction_z = ( directionVector.z < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
 
   // Pn(xn, yn, zn) = P0 + (STEP_RESOLUTION/ ||EuclidianDistance||) * directionVector
   // move x axis first
-  while( !equals(motor_x.getPosition(), p1.x) )
+  while(
+    ( !equals(motor_x.getPosition(), p1.x) ) ||
+    ( !equals(motor_y.getPosition(), p1.y) ) ||
+    ( !equals(motor_z.getPosition(), p1.z) ))
   {
-    pn.x += (interpolationResolution * directionVector.x) + stepRemainder.x;
-    pn.y += (interpolationResolution * directionVector.y) + stepRemainder.y;
-    pn.z += (interpolationResolution * directionVector.z) + stepRemainder.z;
-    //Serial.print("{pn.x: "); Serial.print(pn.x); Serial.print(", ");
-    //Serial.print("pn.y: "); Serial.print(pn.y); Serial.print(", ");
-    //Serial.print("pn.z: "); Serial.print(pn.z); Serial.print("}\n");
-    if( pn.x >= STEP_RESOLUTION ) { motor_x.step(direction_x); stepRemainder.x = pn.x - STEP_RESOLUTION; } else { stepRemainder.x = 0.0; }
-    if( pn.y >= STEP_RESOLUTION ) { motor_y.step(direction_y); stepRemainder.y = pn.y - STEP_RESOLUTION; } else { stepRemainder.y = 0.0; }
-    if( pn.z >= STEP_RESOLUTION ) { motor_z.step(direction_z); stepRemainder.z = pn.z - STEP_RESOLUTION; } else { stepRemainder.z = 0.0; }
-    //Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print(", ");
-    //Serial.print("Y: "); Serial.print(motor_y.getPosition()); Serial.print(", ");
-    //Serial.print("Z: "); Serial.print(motor_z.getPosition()); Serial.print("}\n");
+
+    if( !equals(motor_x.getPosition(), p1.x) )
+    {
+      p_new.x += (interpolationResolution * directionVector.x) + stepRemainder.x;
+    }
+
+    if( !equals(motor_y.getPosition(), p1.y) )
+    {
+      p_new.y += (interpolationResolution * directionVector.y) + stepRemainder.y;
+    }
+
+    if( !equals(motor_z.getPosition(), p1.z) )
+    {
+      p_new.z += (interpolationResolution * directionVector.z) + stepRemainder.z;
+    }
+
+    // DEBUG
+    /*
+    Serial.print("1. {X: "); Serial.print(motor_x.getPosition(), 7); Serial.print(",");
+    Serial.print("  p_new.x: "); Serial.print(p_new.x, 7); Serial.print(",");
+    Serial.print("  stepRemainder.x: "); Serial.print(stepRemainder.x, 7); Serial.print("}  ");
+
+    Serial.print("{Y: "); Serial.print(motor_y.getPosition(), 7); Serial.print(",");
+    Serial.print("  p_new.y: "); Serial.print(p_new.y, 7); Serial.print(",");
+    Serial.print("  stepRemainder.y: "); Serial.print(stepRemainder.y, 7); Serial.print("}\n");
+    */
+
+
+    // x
+    if( !equals(motor_x.getPosition(), p1.x) )
+    {
+      if( abs(p_new.x - motor_x.getPosition()) >= STEP_RESOLUTION )
+      {
+        motor_x.step(direction_x);
+        stepRemainder.x = p_new.x - motor_x.getPosition();
+        p_new.x = motor_x.getPosition();
+       }
+       else
+       {
+          stepRemainder.x = 0.0;
+       }
+    }
+
+    // y
+    if( !equals(motor_y.getPosition(), p1.y) )
+    {
+      if( abs(p_new.y - motor_y.getPosition()) >= STEP_RESOLUTION )
+      {
+        motor_y.step(direction_y);
+        stepRemainder.y = p_new.y - motor_y.getPosition();
+        p_new.y = motor_y.getPosition();
+       }
+       else
+       {
+          stepRemainder.y = 0.0;
+       }
+    }
+
+    // z
+    if( !equals(motor_z.getPosition(), p1.z) )
+    {
+      if( abs(p_new.z - motor_z.getPosition()) >= STEP_RESOLUTION )
+      {
+        motor_z.step(direction_z);
+        stepRemainder.z = p_new.z - motor_z.getPosition();
+        p_new.z = motor_z.getPosition();
+       }
+       else
+       {
+          stepRemainder.z = 0.0;
+       }
+    }
+
+    /* if( (p_new.y - motor_y.getPosition()) >= STEP_RESOLUTION )
+    { motor_x.step(direction_y);    stepRemainder.y = p_new.y + STEP_RESOLUTION - motor_y.getPosition(); } else { stepRemainder.y = 0.0; }
+    if( (p_new.z - motor_z.getPosition()) >= STEP_RESOLUTION )
+    { motor_z.step(direction_z);    stepRemainder.z = p_new.z + STEP_RESOLUTION - motor_z.getPosition(); } else { stepRemainder.z = 0.0; }
+    */
+
+    // DEBUG
+    /*
+    Serial.print("2. {X: "); Serial.print(motor_x.getPosition(), 7); Serial.print(",");
+    Serial.print("  p_new.x: "); Serial.print(p_new.x, 7); Serial.print(",");
+    Serial.print("  stepRemainder.x: "); Serial.print(stepRemainder.x, 5); Serial.print("}  ");
+
+    Serial.print("{Y: "); Serial.print(motor_y.getPosition(), 7); Serial.print(",");
+    Serial.print("  p_new.y: "); Serial.print(p_new.y, 7); Serial.print(",");
+    Serial.print("  stepRemainder.y: "); Serial.print(stepRemainder.y, 7); Serial.print("}\n");
+    */
+
   }
-
-
-  // move remaining steps if any
-  while( !equals(motor_y.getPosition(), p1.y) )
-  {
-    pn.y += (interpolationResolution * directionVector.y) + stepRemainder.y;
-    pn.z += (interpolationResolution * directionVector.z) + stepRemainder.z;
-    if( pn.y >= STEP_RESOLUTION ) { motor_y.step(direction_y); stepRemainder.y = pn.y - STEP_RESOLUTION; } else { stepRemainder.y = 0.0; }
-    if( pn.z >= STEP_RESOLUTION ) { motor_z.step(direction_z); stepRemainder.z = pn.z - STEP_RESOLUTION; } else { stepRemainder.z = 0.0; }
-  }
-
-
-  // move remaining steps if any
-  while( !equals(motor_y.getPosition(), p1.z) )
-  {
-    pn.z += (interpolationResolution * directionVector.z) + stepRemainder.z;
-    if( pn.z >= STEP_RESOLUTION ) { motor_z.step(direction_z); stepRemainder.z = pn.z - STEP_RESOLUTION; } else { stepRemainder.z = 0.0; }
-  }
-
+  Serial.print("{x: "); Serial.print(motor_x.getPosition(), 6); Serial.print(", ");
+  Serial.print(" y: "); Serial.print(motor_y.getPosition(), 6); Serial.print(", ");
+  Serial.print(" z: "); Serial.print(motor_z.getPosition(), 6); Serial.print(" }\n");
 
   return RETURN_SUCCES;
 }
