@@ -101,3 +101,12 @@ static bool isNumericSymbol(char ch)
     return true;
   return false;
 }
+
+
+
+// check if two float numbers are equal
+bool equals(float f1, float f2)
+{
+  if( (f1 >= (f2 - EPSILON)) && (f1 <= (f2 + EPSILON)) ) { return true;}
+  return false;
+}

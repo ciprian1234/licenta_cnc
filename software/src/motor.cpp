@@ -7,13 +7,9 @@
 #define AXIS_MIN_SPEED  (MIN_MOTOR_RPM * AXIS_TRAVEL_DISTANCE_360)
 #define AXIS_MAX_SPEED  (MAX_MOTOR_RPM * AXIS_TRAVEL_DISTANCE_360)
 
-// Stepping resolution between motor steps, measured in mm
-#define STEP_RESOLUTION ( ((float)AXIS_TRAVEL_DISTANCE_360 / (float)NUMBER_OF_STEPS_360) )
-
 
 // Utility function used to set a delay in microseconds
 static void delay_sync(uint32_t us);
-
 
 
 

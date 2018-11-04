@@ -12,6 +12,9 @@
 #define ACCELERATION_DISABLED   0u
 #define ACCELERATION_ENABLED    1u
 
+// Stepping resolution between motor steps, measured in mm
+#define STEP_RESOLUTION ( ((float)AXIS_TRAVEL_DISTANCE_360 / (float)NUMBER_OF_STEPS_360) )
+
 
 
 

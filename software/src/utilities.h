@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include "config.h"
 
+#define EPSILON (0.001)
 
 // Data types
 typedef struct
@@ -17,6 +18,7 @@ typedef struct
 // Functions
 uint8_t readLine(int16_t inputChar, Rx_buffer_t& buffer, uint8_t size);
 uint8_t parseNumber(Rx_buffer_t& buffer, float& outputNumber);
+bool equals(float f1, float f2);
 
 
 #endif
