@@ -240,13 +240,13 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
     p_new.z += (interpolationResolution * directionVector.z) + stepRemainder.z;   stepRemainder.z = 0.0;
 
     // DEBUG
-    Serial.print("1. {X: "); Serial.print(motor_x.getPosition(), 7); Serial.print(",");
+    /*Serial.print("1. {X: "); Serial.print(motor_x.getPosition(), 7); Serial.print(",");
     Serial.print("  p_new.x: "); Serial.print(p_new.x, 7); Serial.print(",");
     Serial.print("  stepRemainder.x: "); Serial.print(stepRemainder.x, 7); Serial.print("}  ");
 
     Serial.print("{Y: "); Serial.print(motor_y.getPosition(), 7); Serial.print(",");
     Serial.print("  p_new.y: "); Serial.print(p_new.y, 7); Serial.print(",");
-    Serial.print("  stepRemainder.y: "); Serial.print(stepRemainder.y, 7); Serial.print("}\n");
+    Serial.print("  stepRemainder.y: "); Serial.print(stepRemainder.y, 7); Serial.print("}\n");*/
 
 
     // x
@@ -275,13 +275,13 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
 
 
     // DEBUG
-    Serial.print("2. {X: "); Serial.print(motor_x.getPosition(), 7); Serial.print(",");
+    /*Serial.print("2. {X: "); Serial.print(motor_x.getPosition(), 7); Serial.print(",");
     Serial.print("  p_new.x: "); Serial.print(p_new.x, 7); Serial.print(",");
     Serial.print("  stepRemainder.x: "); Serial.print(stepRemainder.x, 7); Serial.print("}   ");
 
     Serial.print("{Y: "); Serial.print(motor_y.getPosition(), 7); Serial.print(",");
     Serial.print("  p_new.y: "); Serial.print(p_new.y, 7); Serial.print(",");
-    Serial.print("  stepRemainder.y: "); Serial.print(stepRemainder.y, 7); Serial.print("}\n");
+    Serial.print("  stepRemainder.y: "); Serial.print(stepRemainder.y, 7); Serial.print("}\n");*/
 
   }
   Serial.print("{x: "); Serial.print(motor_x.getPosition(), 6); Serial.print(", ");
@@ -289,4 +289,37 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
   Serial.print(" z: "); Serial.print(motor_z.getPosition(), 6); Serial.print(" }\n");
 
   return RETURN_SUCCES;
+}
+
+
+uint8_t Machine::performLinearInterpolation_G01_Optimized(Point_3d_t& p1)
+{
+  Point_3d_t p0{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current position
+  Point_3d_t p_interpolation{0.0, 0.0, 0.0};
+  Point_3d_t stepRemainder{0.0, 0.0, 0.0};  // reaminder between 2 intermediar steps
+
+  // calculate direction vector of the line between p0 and p1
+  Point_3d_t directionVector{p1.x - p0.x,   p1.y - p0.y,  p1.z - p0.z};
+
+  // compute motor directions
+  uint8_t direction_x = ( directionVector.x < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
+  uint8_t direction_y = ( directionVector.y < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
+  uint8_t direction_z = ( directionVector.z < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
+
+
+  // calculate euclidian distance between po and p1
+  float EuclidianDistance = sqrt( pow(directionVector.x, 2) + pow(directionVector.y, 2) + pow(directionVector.z, 2) );
+  p_interpolation.x = abs((STEP_RESOLUTION / EuclidianDistance) * directionVector.x);
+  p_interpolation.y = abs((STEP_RESOLUTION / EuclidianDistance) * directionVector.y);
+  p_interpolation.z = abs((STEP_RESOLUTION / EuclidianDistance) * directionVector.z);
+
+
+
+  while(
+    ( !equals(motor_x.getPosition(), p1.x) ) ||
+    ( !equals(motor_y.getPosition(), p1.y) ) ||
+    ( !equals(motor_z.getPosition(), p1.z) ))
+  {
+
+  }
 }
