@@ -67,6 +67,7 @@ bool Motor::step(uint8_t direction)
 // output: wait computed delay between steps
 void Motor::waitBetweenSteps(bool accelerationEnabled)
 {
+  (void)accelerationEnabled; // not implemented anymore
   // acceleration: increment motor RPM every N steps
   // acceleration factor - how much RPM is incremented
   // acceleration_interval - how frequent RPM is incremented
@@ -158,8 +159,8 @@ void Motor::moveToHome(void)
 void delay_sync(uint32_t us)
 {
   do {
-    if(us < 2) { return; }  // delayMicroseconds - cant handle delays lower then 2us
-    if(us < 1000) { delayMicroseconds((uint16_t)us); return; }
+    if(us < 2)    { return; }  // delayMicroseconds - cant handle delays lower then 2us
+    if(us < 1000) { delayMicroseconds((uint16_t)us);  return; }
     delayMicroseconds(1000);
     us -= 1000;
   }while(true);

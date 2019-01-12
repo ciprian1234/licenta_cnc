@@ -1,5 +1,7 @@
+*.pyc
 software/.gitignore
 software/.pioenvs
 software/.piolibdeps
 software/.clang_complete
 software/.gcc-flags.json
+virtual_cnc/__pycache__
