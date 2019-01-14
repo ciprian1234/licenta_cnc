@@ -24,7 +24,8 @@ Motor::Motor(uint8_t dirPin, uint8_t stepPin, uint8_t endstopPin, uint16_t axisM
 
   this->AXIS_MAX_POSITION = axisMaxPos;
   this->steps = 0;
-  this->speed = 500;
+
+  this->setSpeed(500);
 }
 
 
@@ -49,7 +50,8 @@ bool Motor::step(uint8_t direction)
 
   // perform step
   digitalWrite(this->STEP_PIN, LOW);
-  this->waitBetweenSteps(ACCELERATION_ENABLED);
+  //this->waitBetweenSteps(ACCELERATION_DISABLED);
+  delay_sync( this->delayBetweenSteps );
   digitalWrite(this->STEP_PIN, HIGH);
 
   // update position
@@ -61,7 +63,7 @@ bool Motor::step(uint8_t direction)
 
 
 
-
+// NOT_USED anymore
 // wait some ammount of time between steps to simulate axis moving speed
 // input: speed (mm/min)        NUMBER_OF_STEPS_360       AXIS_TRAVEL_DISTANCE_360 = 8mm
 // output: wait computed delay between steps
@@ -75,7 +77,7 @@ void Motor::waitBetweenSteps(bool accelerationEnabled)
 
   // SPEED = RPM * AXIS_TRAVEL_DISTANCE_360
   // RPM = SPEED / AXIS_TRAVEL_DISTANCE_360     RPS = RPM / 60
-  float RPS = (this->speed / AXIS_TRAVEL_DISTANCE_360) / 60;  // rotations per second
+  float RPS = ((float)this->speed / AXIS_TRAVEL_DISTANCE_360) / 60;  // rotations per second
 
   // How many steps are required to travel at specified RPM?
   // STEPS_PER_MINUTE = RPM * NUMBER_OF_STEPS_360
@@ -111,6 +113,13 @@ uint8_t Motor::setSpeed(uint16_t newSpeed)
 {
   if( (newSpeed < AXIS_MIN_SPEED) || newSpeed > AXIS_MAX_SPEED ) { return ERROR_INVALID_MOTOR_SPEED; }
   this->speed = newSpeed;
+
+  float RPS = ((float)this->speed / AXIS_TRAVEL_DISTANCE_360) / 60;  // rotations per second
+  uint16_t stepsPerSecond = RPS * NUMBER_OF_STEPS_360;
+
+  // What delay between steps is required to travel at specified speed
+  this->delayBetweenSteps = (uint16_t)(ONE_SENOND_IN_MICROSECONDS / stepsPerSecond);
+
   return RETURN_SUCCES;
 }
 

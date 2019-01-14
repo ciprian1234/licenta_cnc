@@ -31,6 +31,7 @@ class Motor
     // counts numbers of steps moved REVERSE OR FORWARD, this will be multiplied by STEP_RESOLUTION to obtain current position
     int32_t steps;
     uint16_t speed;         // motor moving speed (mm/min)
+    uint16_t delayBetweenSteps; // delay out a motor step transition
 
     // private functions
     Motor(); // constructor with no param not allowed

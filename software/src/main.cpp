@@ -16,6 +16,7 @@ void setup() {
 
     // wait for serial communication
     while(!Serial) {;}
+    Serial.print("cnc>>connected");
 }
 
 
@@ -23,6 +24,9 @@ void setup() {
 
 void loop() {
   uint8_t returnedStatus = 0u;
+
+  // reset arduino if connection is lost
+  if(!Serial) { performSoftwareReset(); }
 
   // read from serial until a line is complete
   returnedStatus = readLine(Serial.read(), rx_buffer, RX_BUFF_SIZE);
