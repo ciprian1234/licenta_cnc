@@ -136,6 +136,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 
 uint8_t Machine::executeMovementCommand()
 {
+  uint8_t returnedStatus = RETURN_SUCCES;
 
   if(!this->newCmd.flags.all) { return RETURN_SUCCES; } // no movement requested
 
@@ -193,17 +194,14 @@ uint8_t Machine::setMotorsSpeed( uint16_t newSpeed)
 
 uint8_t Machine::performAxisLinearMovement_G00(Motor& inputMotor, float newAxisPosition)
 {
-  // TODO: implement relative positioning and ends checking
-  uint16_t steps = 0;
   if(inputMotor.getPosition() < newAxisPosition)  // MOVE FORWARD
   {
-    while(inputMotor.getPosition() < newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_FORWARD)) {break;} steps++;}
+    while(inputMotor.getPosition() < newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_FORWARD)) {return ERROR_AXIS_ENDING_EXCEEDED;} }
   }
   else if(inputMotor.getPosition() > newAxisPosition)  // MOVE REVERSE
   {
-    while(inputMotor.getPosition() > newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_REVERSE)) {break;} steps++;}
+    while(inputMotor.getPosition() > newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_REVERSE)) {return ERROR_AXIS_ENDING_EXCEEDED;} }
   }
-  Serial.print("[steps: "); Serial.print(steps); Serial.print("]\n");
   return RETURN_SUCCES;
 }
 
@@ -219,9 +217,11 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
   // calculate direction vector of the line between p0 and p1
   Point_3d_t directionVector{p1.x - p0.x,   p1.y - p0.y,  p1.z - p0.z};
 
-  // calculate euclidian distance between po and p1
+  // calculate euclidian distance between p0 and p1
   float EuclidianDistance = sqrt( pow(directionVector.x, 2) + pow(directionVector.y, 2) + pow(directionVector.z, 2) );
-  float interpolationResolution = STEP_RESOLUTION / EuclidianDistance;
+  float interpolationResolution_x = (STEP_RESOLUTION / EuclidianDistance) * directionVector.x;
+  float interpolationResolution_y = (STEP_RESOLUTION / EuclidianDistance) * directionVector.y;
+  float interpolationResolution_z = (STEP_RESOLUTION / EuclidianDistance) * directionVector.z;
 
   // compute motor directions
   uint8_t direction_x = ( directionVector.x < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
@@ -229,15 +229,12 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
   uint8_t direction_z = ( directionVector.z < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
 
   // Pn(xn, yn, zn) = p0 + (STEP_RESOLUTION/ ||EuclidianDistance||) * directionVector
-  while(
-    ( !equals(motor_x.getPosition(), p1.x) ) ||
-    ( !equals(motor_y.getPosition(), p1.y) ) ||
-    ( !equals(motor_z.getPosition(), p1.z) ))
+  while( !equals(motor_x.getPosition(), p1.x) || !equals(motor_y.getPosition(), p1.y) || !equals(motor_z.getPosition(), p1.z) )
   {
 
-    p_new.x += (interpolationResolution * directionVector.x) + stepRemainder.x;   stepRemainder.x = 0.0;
-    p_new.y += (interpolationResolution * directionVector.y) + stepRemainder.y;   stepRemainder.y = 0.0;
-    p_new.z += (interpolationResolution * directionVector.z) + stepRemainder.z;   stepRemainder.z = 0.0;
+    p_new.x += interpolationResolution_x + stepRemainder.x;   stepRemainder.x = 0.0;
+    p_new.y += interpolationResolution_y + stepRemainder.y;   stepRemainder.y = 0.0;
+    p_new.z += interpolationResolution_z + stepRemainder.z;   stepRemainder.z = 0.0;
 
     // DEBUG
     /*Serial.print("1. {X: "); Serial.print(motor_x.getPosition(), 7); Serial.print(",");
@@ -252,7 +249,7 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
     // x
     if( !equals(motor_x.getPosition(), p1.x) && (abs(p_new.x - motor_x.getPosition()) >= STEP_RESOLUTION ))
     {
-      motor_x.step(direction_x);
+      if(!motor_x.step(direction_x)) { return ERROR_AXIS_ENDING_EXCEEDED; } // step and check if endstop ending reached
       stepRemainder.x = p_new.x - motor_x.getPosition();
       p_new.x = motor_x.getPosition();
     }
@@ -260,7 +257,7 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
     // y
     if( !equals(motor_y.getPosition(), p1.y) && (abs(p_new.y - motor_y.getPosition()) >= STEP_RESOLUTION ))
     {
-      motor_y.step(direction_y);
+      if(!motor_y.step(direction_y)) { return ERROR_AXIS_ENDING_EXCEEDED; } // step and check if endstop ending reached
       stepRemainder.y = p_new.y - motor_y.getPosition();
       p_new.y = motor_y.getPosition();
     }
@@ -268,20 +265,10 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
     // z
     if( !equals(motor_z.getPosition(), p1.z) && (abs(p_new.z - motor_z.getPosition()) >= STEP_RESOLUTION ))
     {
-      motor_z.step(direction_z);
+      if(!motor_z.step(direction_z)) { return ERROR_AXIS_ENDING_EXCEEDED; } // step and check if endstop ending reached
       stepRemainder.z = p_new.z - motor_z.getPosition();
       p_new.z = motor_z.getPosition();
     }
-
-
-    // DEBUG
-    /*Serial.print("2. {X: "); Serial.print(motor_x.getPosition(), 7); Serial.print(",");
-    Serial.print("  p_new.x: "); Serial.print(p_new.x, 7); Serial.print(",");
-    Serial.print("  stepRemainder.x: "); Serial.print(stepRemainder.x, 7); Serial.print("}   ");
-
-    Serial.print("{Y: "); Serial.print(motor_y.getPosition(), 7); Serial.print(",");
-    Serial.print("  p_new.y: "); Serial.print(p_new.y, 7); Serial.print(",");
-    Serial.print("  stepRemainder.y: "); Serial.print(stepRemainder.y, 7); Serial.print("}\n");*/
 
   }
   Serial.print("{x: "); Serial.print(motor_x.getPosition(), 6); Serial.print(", ");
@@ -294,32 +281,41 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
 
 uint8_t Machine::performLinearInterpolation_G01_Optimized(Point_3d_t& p1)
 {
-  Point_3d_t p0{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current position
-  Point_3d_t p_interpolation{0.0, 0.0, 0.0};
-  Point_3d_t stepRemainder{0.0, 0.0, 0.0};  // reaminder between 2 intermediar steps
-
-  // calculate direction vector of the line between p0 and p1
-  Point_3d_t directionVector{p1.x - p0.x,   p1.y - p0.y,  p1.z - p0.z};
+  Point_3d_t p0{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current
+  Point_3d_t p_new{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current position
+  Point_3d_t directionVector{p1.x - p0.x,   p1.y - p0.y,  p1.z - p0.z}; // calculate direction vector of the line between p0 and p1
 
   // compute motor directions
   uint8_t direction_x = ( directionVector.x < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
   uint8_t direction_y = ( directionVector.y < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
   uint8_t direction_z = ( directionVector.z < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
 
+  // calculate euclidian distance between p0 and p1
+  //float EuclidianDistance = sqrt( pow(directionVector.x, 2) + pow(directionVector.y, 2) + pow(directionVector.z, 2) );
 
-  // calculate euclidian distance between po and p1
-  float EuclidianDistance = sqrt( pow(directionVector.x, 2) + pow(directionVector.y, 2) + pow(directionVector.z, 2) );
-  p_interpolation.x = abs((STEP_RESOLUTION / EuclidianDistance) * directionVector.x);
-  p_interpolation.y = abs((STEP_RESOLUTION / EuclidianDistance) * directionVector.y);
-  p_interpolation.z = abs((STEP_RESOLUTION / EuclidianDistance) * directionVector.z);
-
-
-
-  while(
-    ( !equals(motor_x.getPosition(), p1.x) ) ||
-    ( !equals(motor_y.getPosition(), p1.y) ) ||
-    ( !equals(motor_z.getPosition(), p1.z) ))
+  // interpolate to point p1 while is not reached
+  while( !equals(motor_x.getPosition(), p1.x) || !equals(motor_y.getPosition(), p1.y) || !equals(motor_z.getPosition(), p1.z) )
   {
+    p_new.x += (STEP_RESOLUTION * directionVector.x);
+    p_new.y += (STEP_RESOLUTION * directionVector.y);
+    p_new.z += (STEP_RESOLUTION * directionVector.z);
+
+    // move z axis first
+    while( !equals(motor_z.getPosition(), p_new.z) )
+    {
+      if(!motor_z.step(direction_z)) { return ERROR_AXIS_ENDING_EXCEEDED; }
+    }
+
+    while( !equals(motor_x.getPosition(), p_new.x) )
+    {
+      if(!motor_x.step(direction_x)) { return ERROR_AXIS_ENDING_EXCEEDED; }
+    }
+
+    while( !equals(motor_y.getPosition(), p_new.y) )
+    {
+      if(!motor_y.step(direction_y)) { return ERROR_AXIS_ENDING_EXCEEDED; }
+    }
 
   }
+  return RETURN_SUCCES;
 }

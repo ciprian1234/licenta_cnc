@@ -111,7 +111,7 @@ void Motor::waitBetweenSteps(bool accelerationEnabled)
 
 uint8_t Motor::setSpeed(uint16_t newSpeed)
 {
-  if( (newSpeed < AXIS_MIN_SPEED) || newSpeed > AXIS_MAX_SPEED ) { return ERROR_INVALID_MOTOR_SPEED; }
+  if( (newSpeed < AXIS_MIN_SPEED) || newSpeed > AXIS_MAX_SPEED ) { return RETURN_SUCCES; /* TODO: set to limits of speed*/ }
   this->speed = newSpeed;
 
   float RPS = ((float)this->speed / AXIS_TRAVEL_DISTANCE_360) / 60;  // rotations per second
@@ -137,7 +137,7 @@ float Motor::getPosition()
 // set Logical position to axis
 uint8_t Motor::setPosition(float newPosition)
 {
-  if(newPosition > this->AXIS_MAX_POSITION) { return ERROR_AXIS_MAX_POSITION_EXCEDED; }
+  if(newPosition > this->AXIS_MAX_POSITION) { return ERROR_AXIS_ENDING_EXCEEDED; }
   this->steps = (int32_t)newPosition / STEP_RESOLUTION;
   return RETURN_SUCCES;
 }

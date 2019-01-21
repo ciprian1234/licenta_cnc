@@ -39,6 +39,10 @@ void handleRuntimeError(uint8_t errorCode)
       Serial.print( F("CNC>>>error: Invalid number format or number size exceded!\n") );
       break;
 
+    case ERROR_AXIS_ENDING_EXCEEDED:
+      Serial.print( F("CNC>>>error: Axis ending exceeded!\n") );
+      break;
+
     case ERROR_UNEXPECTED:
       Serial.print( F("CNC>>>error: An unexpected error occured!\n") );
       break;
