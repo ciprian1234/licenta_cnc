@@ -90,7 +90,9 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
         break;
 
       case '#':
-        // handle special commands
+        Serial.print("{X: "); Serial.print(motor_x.getPosition(), 5); Serial.print(",");
+        Serial.print(" Y: "); Serial.print(motor_y.getPosition(), 5); Serial.print(",");
+        Serial.print(" Z: "); Serial.print(motor_z.getPosition(), 5); Serial.print("}\n");
         break;
 
       default:
@@ -161,7 +163,7 @@ uint8_t Machine::executeMovementCommand()
       if(this->newCmd.flags.x) { p1.x =  this->newCmd.x; }
       if(this->newCmd.flags.y) { p1.y =  this->newCmd.y; }
       if(this->newCmd.flags.z) { p1.z =  this->newCmd.z; }
-      performLinearInterpolation_G01(p1);
+      performLinearInterpolation_G01_Optimized(p1);
       break;
     }
 
@@ -281,41 +283,55 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
 
 uint8_t Machine::performLinearInterpolation_G01_Optimized(Point_3d_t& p1)
 {
-  Point_3d_t p0{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current
-  Point_3d_t p_new{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current position
-  Point_3d_t directionVector{p1.x - p0.x,   p1.y - p0.y,  p1.z - p0.z}; // calculate direction vector of the line between p0 and p1
+  Point_3d_t p0{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current position
+  Point_3d_t steps{0.0, 0.0, 0.0};  // reaminder between 2 intermediar steps
+
+  // calculate direction vector of the line between p0 and p1
+  Point_3d_t directionVector{p1.x - p0.x,   p1.y - p0.y,  p1.z - p0.z};
+
+  // calculate euclidian distance between p0 and p1
+  float EuclidianDistance = sqrt( pow(directionVector.x, 2) + pow(directionVector.y, 2) + pow(directionVector.z, 2) );
+  float interpolationResolution_x = (STEP_RESOLUTION / EuclidianDistance) * abs(directionVector.x);
+  float interpolationResolution_y = (STEP_RESOLUTION / EuclidianDistance) * abs(directionVector.y);
+  float interpolationResolution_z = (STEP_RESOLUTION / EuclidianDistance) * abs(directionVector.z);
 
   // compute motor directions
   uint8_t direction_x = ( directionVector.x < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
   uint8_t direction_y = ( directionVector.y < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
   uint8_t direction_z = ( directionVector.z < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
 
-  // calculate euclidian distance between p0 and p1
-  //float EuclidianDistance = sqrt( pow(directionVector.x, 2) + pow(directionVector.y, 2) + pow(directionVector.z, 2) );
 
-  // interpolate to point p1 while is not reached
+  // Pn(xn, yn, zn) = p0 + (STEP_RESOLUTION/ ||EuclidianDistance||) * directionVector
   while( !equals(motor_x.getPosition(), p1.x) || !equals(motor_y.getPosition(), p1.y) || !equals(motor_z.getPosition(), p1.z) )
   {
-    p_new.x += (STEP_RESOLUTION * directionVector.x);
-    p_new.y += (STEP_RESOLUTION * directionVector.y);
-    p_new.z += (STEP_RESOLUTION * directionVector.z);
+    steps.x += interpolationResolution_x;
+    steps.y += interpolationResolution_y;
+    steps.z += interpolationResolution_z;
 
-    // move z axis first
-    while( !equals(motor_z.getPosition(), p_new.z) )
-    {
-      if(!motor_z.step(direction_z)) { return ERROR_AXIS_ENDING_EXCEEDED; }
-    }
 
-    while( !equals(motor_x.getPosition(), p_new.x) )
+    if( steps.x >= STEP_RESOLUTION )
     {
       if(!motor_x.step(direction_x)) { return ERROR_AXIS_ENDING_EXCEEDED; }
+      steps.x -= STEP_RESOLUTION;
     }
 
-    while( !equals(motor_y.getPosition(), p_new.y) )
+
+    if( steps.y >= STEP_RESOLUTION )
     {
       if(!motor_y.step(direction_y)) { return ERROR_AXIS_ENDING_EXCEEDED; }
+      steps.y -= STEP_RESOLUTION;
     }
 
+
+    if( steps.z >= STEP_RESOLUTION )
+    {
+      if(!motor_z.step(direction_z)) { return ERROR_AXIS_ENDING_EXCEEDED; }
+      steps.z -= STEP_RESOLUTION;
+    }
+
+
+
   }
+
   return RETURN_SUCCES;
 }
