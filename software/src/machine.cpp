@@ -70,7 +70,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
           case COMMAND_MOVEMENT_G01:    this->machineMode.movement = COMMAND_MOVEMENT_G01; break;
           case COMMAND_MOVEMENT_G02:    this->machineMode.movement = COMMAND_MOVEMENT_G02; break;
           case COMMAND_MOVEMENT_G03:    this->machineMode.movement = COMMAND_MOVEMENT_G03; break;
-          case COMMAND_HOME_G28:        motor_z.moveToHome(); motor_x.moveToHome(); motor_y.moveToHome(); break;
+          case COMMAND_HOME_G28:        motor_x.moveToHome(); motor_y.moveToHome(); motor_z.moveToHome(); break;
           case COMMAND_UNIT_G20:        this->machineMode.unit = COMMAND_UNIT_G20; break;
           case COMMAND_UNIT_G21:        this->machineMode.unit = COMMAND_UNIT_G21; break;
           case COMMAND_POSITIONING_G90: this->machineMode.positioning = COMMAND_POSITIONING_G90; break;

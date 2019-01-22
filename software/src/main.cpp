@@ -16,7 +16,7 @@ void setup() {
 
     // wait for serial communication
     while(!Serial) {;}
-    Serial.print("cnc>>connected");
+    Serial.print("cnc>>>connected\n");
 }
 
 

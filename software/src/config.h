@@ -2,7 +2,7 @@
 #define CONFIG_H
 
 // Baud rate
-#define BAUD_RATE 9600u
+#define BAUD_RATE 115200u
 
 
 // Size of the buffer for recieved commands
