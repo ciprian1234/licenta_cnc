@@ -36,7 +36,7 @@ void loop() {
   if( true == rx_buffer.ready)
   {
     // DEBUG
-    Serial.print("1.INPUT: <<"); Serial.print(rx_buffer.data); Serial.print(">>\n");
+    //Serial.print("1.INPUT: <<"); Serial.print(rx_buffer.data); Serial.print(">>\n");
 
     // parse line
     returnedStatus = machine.parseLine(rx_buffer);

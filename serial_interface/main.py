@@ -12,11 +12,11 @@ def readService(ser):
     global cnc_available
     while True:
         response = ser.readline().decode('utf-8')
+        if( ("connected" in response) or ("done" in response) or ("error" in response) ):
+            cnc_available = True
+
         print(response, end='')
         sys.stdout.flush()
-
-        if( ("done" in response) or ("connected" in response) ):
-            cnc_available = True
 
 
 

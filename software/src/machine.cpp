@@ -55,9 +55,9 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
     integerPart = (int16_t)commandNumber;
 
     // DEBUG
-    Serial.print("[PARSER: ");
-    Serial.print("Symbol: "); Serial.print(commandSymbol);  Serial.print("  ");
-    Serial.print("Number: "); Serial.print(commandNumber);  Serial.print("]\n");
+    // Serial.print("[PARSER: ");
+    // Serial.print("Symbol: "); Serial.print(commandSymbol);  Serial.print("  ");
+    // Serial.print("Number: "); Serial.print(commandNumber);  Serial.print("]\n");
     //Serial.print("CommandNumber: ["); Serial.print(commandNumber);  Serial.print("]\n");
 
     switch(commandSymbol)
@@ -152,9 +152,6 @@ uint8_t Machine::executeMovementCommand()
       if(this->newCmd.flags.x) { performAxisLinearMovement_G00(motor_x, this->newCmd.x); }
       if(this->newCmd.flags.y) { performAxisLinearMovement_G00(motor_y, this->newCmd.y); }
       if(this->newCmd.flags.z) { performAxisLinearMovement_G00(motor_z, this->newCmd.z); }
-      Serial.print("{X: "); Serial.print(motor_x.getPosition()); Serial.print(", ");
-      Serial.print("Y: "); Serial.print(motor_y.getPosition()); Serial.print(", ");
-      Serial.print("Z: "); Serial.print(motor_z.getPosition()); Serial.print("}\n");
       break;
     }
     case COMMAND_MOVEMENT_G01:
@@ -163,12 +160,17 @@ uint8_t Machine::executeMovementCommand()
       if(this->newCmd.flags.x) { p1.x =  this->newCmd.x; }
       if(this->newCmd.flags.y) { p1.y =  this->newCmd.y; }
       if(this->newCmd.flags.z) { p1.z =  this->newCmd.z; }
-      performLinearInterpolation_G01_Optimized(p1);
+      performLinearInterpolation_G01(p1);
       break;
     }
 
     case COMMAND_MOVEMENT_G02:
+    {
+      Point_3d_t p1{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // new point
+      // check if new point: p1 is on circle
+      performCircularArcInterpolation_G02();
       break;
+    }
     case COMMAND_MOVEMENT_G03:
       break;
     default:
@@ -210,78 +212,8 @@ uint8_t Machine::performAxisLinearMovement_G00(Motor& inputMotor, float newAxisP
 
 
 
+
 uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
-{
-  Point_3d_t p0{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current position
-  Point_3d_t p_new = p0;
-  Point_3d_t stepRemainder{0.0, 0.0, 0.0};  // reaminder between 2 intermediar steps
-
-  // calculate direction vector of the line between p0 and p1
-  Point_3d_t directionVector{p1.x - p0.x,   p1.y - p0.y,  p1.z - p0.z};
-
-  // calculate euclidian distance between p0 and p1
-  float EuclidianDistance = sqrt( pow(directionVector.x, 2) + pow(directionVector.y, 2) + pow(directionVector.z, 2) );
-  float interpolationResolution_x = (STEP_RESOLUTION / EuclidianDistance) * directionVector.x;
-  float interpolationResolution_y = (STEP_RESOLUTION / EuclidianDistance) * directionVector.y;
-  float interpolationResolution_z = (STEP_RESOLUTION / EuclidianDistance) * directionVector.z;
-
-  // compute motor directions
-  uint8_t direction_x = ( directionVector.x < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
-  uint8_t direction_y = ( directionVector.y < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
-  uint8_t direction_z = ( directionVector.z < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
-
-  // Pn(xn, yn, zn) = p0 + (STEP_RESOLUTION/ ||EuclidianDistance||) * directionVector
-  while( !equals(motor_x.getPosition(), p1.x) || !equals(motor_y.getPosition(), p1.y) || !equals(motor_z.getPosition(), p1.z) )
-  {
-
-    p_new.x += interpolationResolution_x + stepRemainder.x;   stepRemainder.x = 0.0;
-    p_new.y += interpolationResolution_y + stepRemainder.y;   stepRemainder.y = 0.0;
-    p_new.z += interpolationResolution_z + stepRemainder.z;   stepRemainder.z = 0.0;
-
-    // DEBUG
-    /*Serial.print("1. {X: "); Serial.print(motor_x.getPosition(), 7); Serial.print(",");
-    Serial.print("  p_new.x: "); Serial.print(p_new.x, 7); Serial.print(",");
-    Serial.print("  stepRemainder.x: "); Serial.print(stepRemainder.x, 7); Serial.print("}  ");
-
-    Serial.print("{Y: "); Serial.print(motor_y.getPosition(), 7); Serial.print(",");
-    Serial.print("  p_new.y: "); Serial.print(p_new.y, 7); Serial.print(",");
-    Serial.print("  stepRemainder.y: "); Serial.print(stepRemainder.y, 7); Serial.print("}\n");*/
-
-
-    // x
-    if( !equals(motor_x.getPosition(), p1.x) && (abs(p_new.x - motor_x.getPosition()) >= STEP_RESOLUTION ))
-    {
-      if(!motor_x.step(direction_x)) { return ERROR_AXIS_ENDING_EXCEEDED; } // step and check if endstop ending reached
-      stepRemainder.x = p_new.x - motor_x.getPosition();
-      p_new.x = motor_x.getPosition();
-    }
-
-    // y
-    if( !equals(motor_y.getPosition(), p1.y) && (abs(p_new.y - motor_y.getPosition()) >= STEP_RESOLUTION ))
-    {
-      if(!motor_y.step(direction_y)) { return ERROR_AXIS_ENDING_EXCEEDED; } // step and check if endstop ending reached
-      stepRemainder.y = p_new.y - motor_y.getPosition();
-      p_new.y = motor_y.getPosition();
-    }
-
-    // z
-    if( !equals(motor_z.getPosition(), p1.z) && (abs(p_new.z - motor_z.getPosition()) >= STEP_RESOLUTION ))
-    {
-      if(!motor_z.step(direction_z)) { return ERROR_AXIS_ENDING_EXCEEDED; } // step and check if endstop ending reached
-      stepRemainder.z = p_new.z - motor_z.getPosition();
-      p_new.z = motor_z.getPosition();
-    }
-
-  }
-  Serial.print("{x: "); Serial.print(motor_x.getPosition(), 6); Serial.print(", ");
-  Serial.print(" y: "); Serial.print(motor_y.getPosition(), 6); Serial.print(", ");
-  Serial.print(" z: "); Serial.print(motor_z.getPosition(), 6); Serial.print(" }\n");
-
-  return RETURN_SUCCES;
-}
-
-
-uint8_t Machine::performLinearInterpolation_G01_Optimized(Point_3d_t& p1)
 {
   Point_3d_t p0{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // get coordonates of current position
   Point_3d_t steps{0.0, 0.0, 0.0};  // reaminder between 2 intermediar steps
@@ -301,13 +233,12 @@ uint8_t Machine::performLinearInterpolation_G01_Optimized(Point_3d_t& p1)
   uint8_t direction_z = ( directionVector.z < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
 
 
-  // Pn(xn, yn, zn) = p0 + (STEP_RESOLUTION/ ||EuclidianDistance||) * directionVector
+  // Pn(xn, yn, zn) = p0 + (STEP_RESOLUTION / EuclidianDistance) * directionVector
   while( !equals(motor_x.getPosition(), p1.x) || !equals(motor_y.getPosition(), p1.y) || !equals(motor_z.getPosition(), p1.z) )
   {
     steps.x += interpolationResolution_x;
     steps.y += interpolationResolution_y;
     steps.z += interpolationResolution_z;
-
 
     if( steps.x >= STEP_RESOLUTION )
     {
@@ -315,13 +246,11 @@ uint8_t Machine::performLinearInterpolation_G01_Optimized(Point_3d_t& p1)
       steps.x -= STEP_RESOLUTION;
     }
 
-
     if( steps.y >= STEP_RESOLUTION )
     {
       if(!motor_y.step(direction_y)) { return ERROR_AXIS_ENDING_EXCEEDED; }
       steps.y -= STEP_RESOLUTION;
     }
-
 
     if( steps.z >= STEP_RESOLUTION )
     {
@@ -329,9 +258,28 @@ uint8_t Machine::performLinearInterpolation_G01_Optimized(Point_3d_t& p1)
       steps.z -= STEP_RESOLUTION;
     }
 
-
-
   }
+  return RETURN_SUCCES;
+}
+
+
+// Circle ecuation: (x − center.x)^2 + (y − center.y)^2 = radius^2
+uint8_t Machine::performCircularArcInterpolation_G02()
+{
+  const int LINE_RESOLUTION = 10;
+  Point_2d_t p0{motor_x.getPosition(), motor_y.getPosition()};
+  Point_2d_t p_new{motor_x.getPosition(), motor_y.getPosition()};
+  Point_2d_t p1{this->newCmd.x, this->newCmd.y};
+
+  Point_2d_t center{motor_x.getPosition()+this->newCmd.i, motor_x.getPosition()+this->newCmd.j};
+
+  float radius_squared = pow(center.x - p0.x, 2) + pow(center.y - p0.y, 2);
+  float radius = sqrt( pow(center.x - p0.x, 2) + pow(center.y - p0.y, 2) );
+  while( p_new.x + LINE_RESOLUTION < center.x + radius )
+  {
+    //compute new y
+  }
+
 
   return RETURN_SUCCES;
 }

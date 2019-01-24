@@ -26,8 +26,14 @@
 
 typedef struct
 {
+  float x, y;
+}Point_2d_t;
+
+typedef struct
+{
   float x, y, z;
 }Point_3d_t;
+
 
 
 
@@ -80,7 +86,7 @@ public:
   uint8_t setMotorsSpeed(uint16_t newSpeed);
   uint8_t performAxisLinearMovement_G00(Motor& inputMotor, float newAxisPosition);
   uint8_t performLinearInterpolation_G01(Point_3d_t& p1);
-  uint8_t performLinearInterpolation_G01_Optimized(Point_3d_t& p1);
+  uint8_t performCircularArcInterpolation_G02();
 };
 
 
