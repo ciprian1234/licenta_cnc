@@ -125,10 +125,18 @@ uint8_t Motor::setSpeed(uint16_t newSpeed)
 
 
 
-
+// get motor position in float relative to 0
 float Motor::getPosition()
 {
   return this->steps * STEP_RESOLUTION;
+}
+
+
+
+// get motor position in steps relative to 0
+int32_t Motor::getStepPosition()
+{
+  return this->steps;
 }
 
 

@@ -58,7 +58,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
     // Serial.print("[PARSER: ");
     // Serial.print("Symbol: "); Serial.print(commandSymbol);  Serial.print("  ");
     // Serial.print("Number: "); Serial.print(commandNumber);  Serial.print("]\n");
-    //Serial.print("CommandNumber: ["); Serial.print(commandNumber);  Serial.print("]\n");
+    // Serial.print("CommandNumber: ["); Serial.print(commandNumber);  Serial.print("]\n");
 
     switch(commandSymbol)
     {
@@ -166,13 +166,26 @@ uint8_t Machine::executeMovementCommand()
 
     case COMMAND_MOVEMENT_G02:
     {
-      Point_3d_t p1{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // new point
+      //Point_3d_t p1{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // new point
       // check if new point: p1 is on circle
-      performCircularArcInterpolation_G02();
+      this->newCmd.x = CONVERT_INTO_STEPS(this->newCmd.x);
+      this->newCmd.y = CONVERT_INTO_STEPS(this->newCmd.y);
+      this->newCmd.i = CONVERT_INTO_STEPS(this->newCmd.i);
+      this->newCmd.j = CONVERT_INTO_STEPS(this->newCmd.j);
+      this->newCmd.r = CONVERT_INTO_STEPS(this->newCmd.r);
+      performCircularArcInterpolation(0);
       break;
     }
     case COMMAND_MOVEMENT_G03:
+    {
+      this->newCmd.x = CONVERT_INTO_STEPS(this->newCmd.x);
+      this->newCmd.y = CONVERT_INTO_STEPS(this->newCmd.y);
+      this->newCmd.i = CONVERT_INTO_STEPS(this->newCmd.i);
+      this->newCmd.j = CONVERT_INTO_STEPS(this->newCmd.j);
+      this->newCmd.r = CONVERT_INTO_STEPS(this->newCmd.r);
+      performCircularArcInterpolation(1);
       break;
+    }
     default:
       return ERROR_UNEXPECTED;
   }
@@ -232,7 +245,6 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
   uint8_t direction_y = ( directionVector.y < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
   uint8_t direction_z = ( directionVector.z < 0.0 ) ? MOTOR_DIRECTION_REVERSE : MOTOR_DIRECTION_FORWARD;
 
-
   // Pn(xn, yn, zn) = p0 + (STEP_RESOLUTION / EuclidianDistance) * directionVector
   while( !equals(motor_x.getPosition(), p1.x) || !equals(motor_y.getPosition(), p1.y) || !equals(motor_z.getPosition(), p1.z) )
   {
@@ -264,22 +276,99 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
 
 
 // Circle ecuation: (x − center.x)^2 + (y − center.y)^2 = radius^2
-uint8_t Machine::performCircularArcInterpolation_G02()
+// Possible moving directions:
+// ClockWise:
+// Case 1: (p.x < center.x) AND (p.y > center.y) => X++, Y++  (We are in upper left)
+// Case 2: (p.x > center.x) AND (p.y > center.y) => X++, Y--  (We are in upper right)
+// Case 3: (p.x > center.x) AND (p.y < center.y) => X--, Y--  (We are in lower right)
+// Case 4: (p.x < center.x) AND (p.y < center.y) => X--, Y++  (We are in lower left)
+uint8_t Machine::performCircularArcInterpolation(uint8_t DIR)
 {
-  const int LINE_RESOLUTION = 10;
-  Point_2d_t p0{motor_x.getPosition(), motor_y.getPosition()};
-  Point_2d_t p_new{motor_x.getPosition(), motor_y.getPosition()};
-  Point_2d_t p1{this->newCmd.x, this->newCmd.y};
+  Point_2d_t p0{motor_x.getStepPosition(), motor_x.getStepPosition()};  // starting point
+  Point_2d_t p1{this->newCmd.x, this->newCmd.y};                        // ending point
+  Point_2d_t p = p0;                                                    // moving point
 
-  Point_2d_t center{motor_x.getPosition()+this->newCmd.i, motor_x.getPosition()+this->newCmd.j};
-
-  float radius_squared = pow(center.x - p0.x, 2) + pow(center.y - p0.y, 2);
-  float radius = sqrt( pow(center.x - p0.x, 2) + pow(center.y - p0.y, 2) );
-  while( p_new.x + LINE_RESOLUTION < center.x + radius )
+  // Compute center of the cerc
+  Point_2d_t center{0,0};
+  if(this->newCmd.flags.r)
   {
-    //compute new y
+    center.x = p0.x + this->newCmd.r;
+    center.y = p0.y;
+  }
+  else
+  {
+    center.x = motor_x.getStepPosition() + this->newCmd.i;
+    center.y = motor_y.getStepPosition() + this->newCmd.j;
   }
 
+  // Radius squared of the circle
+  float radius_squared = pow(center.x - p0.x, 2) + pow(center.y - p0.y, 2);
+
+  // DEBUGING
+  Serial.print("[ p0("); Serial.print(p0.x, DEC); Serial.print(","); Serial.print(p0.y, DEC); Serial.print(")");
+  Serial.print("  p1("); Serial.print(p1.x, DEC); Serial.print(","); Serial.print(p1.y, DEC); Serial.print(")");
+  Serial.print("  center("); Serial.print(center.x, DEC); Serial.print(","); Serial.print(center.y, DEC); Serial.print(") ]\n");
+
+
+  // tests
+  uint8_t f = 0, a = 0, b = 0;
+  float fxy = 0.0;
+  uint8_t decision_binary = 0u;
+  int8_t step_x = 0, step_y = 0;
+  do
+  {
+    fxy = pow(p.x-center.x, 2) + pow(p.y-center.y, 2) - radius_squared;
+    f = (fxy < 0)?   0:1;
+    a = (p.x < center.x)? 0:1;
+    b = (p.y < center.y)? 0:1;
+
+    // compute if we step on x direction or y direction
+    step_x = 0; step_y = 0;
+    decision_binary = ((DIR<<3) | (f<<2) | (a<<1)) + b;
+    switch( decision_binary )
+    {
+      // clockwise directions
+      case  0: { step_x = -1; break; }
+      case  1: { step_y =  1; break; }
+      case  2: { step_y = -1; break; }
+      case  3: { step_x =  1; break; }
+      case  4: { step_y =  1; break; }
+      case  5: { step_x =  1; break; }
+      case  6: { step_x = -1; break; }
+      case  7: { step_y = -1; break; }
+      // counter clockwise directions
+      case  8: { step_y = -1; break; }
+      case  9: { step_x = -1; break; }
+      case 10: { step_x =  1; break; }
+      case 11: { step_y =  1; break; }
+      case 12: { step_x =  1; break; }
+      case 13: { step_y = -1; break; }
+      case 14: { step_y =  1; break; }
+      case 15: { step_x = -1; break; }
+    }
+
+    // execute step
+    if(step_x < 0)      { motor_x.step(MOTOR_DIRECTION_REVERSE); }
+    else if(step_x > 0) { motor_x.step(MOTOR_DIRECTION_FORWARD); }
+    else { /*Do not move yet on x axis yet*/ }
+    if(step_y < 0)      { motor_y.step(MOTOR_DIRECTION_REVERSE); }
+    else if(step_y > 0) { motor_y.step(MOTOR_DIRECTION_FORWARD); }
+    else { /*Do not move yet on y axis yet*/ }
+
+    p.x = motor_x.getStepPosition();
+    p.y = motor_y.getStepPosition();
+
+
+    // exit when the end point of the arc is reached
+    if( !this->newCmd.flags.r && (p.x == p1.x && p.y == p1.y) ) { Serial.print("ARC COMPLETE: P1 REACHED!"); break;  }
+  }
+  while( (p.x != p0.x) || (p.y != p0.y) ); // exit when cerc is completed
+
+  Serial.print("< p("); Serial.print(p.x, DEC); Serial.print(","); Serial.print(p.y, DEC); Serial.print(")   ");
+  // Serial.print("fxy: "); Serial.print(fxy); Serial.print("  ");
+  // Serial.print("STEP_X: "); Serial.print(step_x); Serial.print("  ");
+  // Serial.print("STEP_Y: "); Serial.print(step_y); Serial.print("  ");
+  // Serial.print("BIN("); Serial.print(decision_binary, BIN); Serial.print(") >\n");
 
   return RETURN_SUCCES;
 }

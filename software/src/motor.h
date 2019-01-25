@@ -15,7 +15,7 @@
 // Stepping resolution between motor steps, measured in mm
 #define STEP_RESOLUTION ( ((float)AXIS_TRAVEL_DISTANCE_360 / (float)NUMBER_OF_STEPS_360) )
 
-
+#define CONVERT_INTO_STEPS(number) ( (int32_t)(number/STEP_RESOLUTION) )
 
 
 class Motor
@@ -29,8 +29,8 @@ class Motor
 
     // used to compute logical axis position measured in mm, by default is 0 when machine starts
     // counts numbers of steps moved REVERSE OR FORWARD, this will be multiplied by STEP_RESOLUTION to obtain current position
-    int32_t steps;
-    uint16_t speed;         // motor moving speed (mm/min)
+    int32_t steps;              // motor position stored in steps relative to 0 position
+    uint16_t speed;             // motor moving speed (mm/min)
     uint16_t delayBetweenSteps; // delay out a motor step transition
 
     // private functions
@@ -47,6 +47,8 @@ class Motor
     uint8_t setSpeed(uint16_t newSpeed);
 
     float getPosition();
+
+    int32_t getStepPosition();
 
     uint8_t setPosition(float newPosition);
 

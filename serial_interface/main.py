@@ -10,8 +10,12 @@ connected = False
 # thread function for reading cnc response
 def readService(ser):
     global cnc_available
+    response = ""
     while True:
-        response = ser.readline().decode('utf-8')
+        try:
+            response = ser.readline().decode('utf-8')
+        except UnicodeDecodeError as e:
+            cnc_available = True
         if( ("connected" in response) or ("done" in response) or ("error" in response) ):
             cnc_available = True
 
