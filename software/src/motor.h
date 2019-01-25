@@ -25,7 +25,7 @@ class Motor
     const uint8_t DIR_PIN;      // direction pin of the motor
     const uint8_t STEP_PIN;     // step pin of the motor
     const uint8_t ENDSTOP_PIN;  // endstop signal pin
-    uint16_t AXIS_MAX_POSITION; // maximum possible logical axis position
+    int32_t AXIS_MAX_STEPS;     // maximum possible steps in forward direction relative to home point
 
     // used to compute logical axis position measured in mm, by default is 0 when machine starts
     // counts numbers of steps moved REVERSE OR FORWARD, this will be multiplied by STEP_RESOLUTION to obtain current position
@@ -48,7 +48,7 @@ class Motor
 
     float getPosition();
 
-    int32_t getStepPosition();
+    int32_t getPositionInSteps();
 
     uint8_t setPosition(float newPosition);
 

@@ -14,7 +14,7 @@
 
 
 // Max Y axis (mm)
-#define AXIS_MAX_POSITION_Y 200u
+#define AXIS_MAX_POSITION_Y 190u
 
 
 // Max Z axis (mm)

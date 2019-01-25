@@ -149,9 +149,9 @@ uint8_t Machine::executeMovementCommand()
   {
     case COMMAND_MOVEMENT_G00:
     {
-      if(this->newCmd.flags.x) { performAxisLinearMovement_G00(motor_x, this->newCmd.x); }
-      if(this->newCmd.flags.y) { performAxisLinearMovement_G00(motor_y, this->newCmd.y); }
-      if(this->newCmd.flags.z) { performAxisLinearMovement_G00(motor_z, this->newCmd.z); }
+      if(this->newCmd.flags.x) { performAxisLinearMovement_G00(motor_x, CONVERT_INTO_STEPS(this->newCmd.x)); }
+      if(this->newCmd.flags.y) { performAxisLinearMovement_G00(motor_y, CONVERT_INTO_STEPS(this->newCmd.y)); }
+      if(this->newCmd.flags.z) { performAxisLinearMovement_G00(motor_z, CONVERT_INTO_STEPS(this->newCmd.z)); }
       break;
     }
     case COMMAND_MOVEMENT_G01:
@@ -168,12 +168,14 @@ uint8_t Machine::executeMovementCommand()
     {
       //Point_3d_t p1{motor_x.getPosition(), motor_y.getPosition(), motor_z.getPosition()}; // new point
       // check if new point: p1 is on circle
+
+      // TODO: implement plane select: XY Xz Yz
       this->newCmd.x = CONVERT_INTO_STEPS(this->newCmd.x);
       this->newCmd.y = CONVERT_INTO_STEPS(this->newCmd.y);
       this->newCmd.i = CONVERT_INTO_STEPS(this->newCmd.i);
       this->newCmd.j = CONVERT_INTO_STEPS(this->newCmd.j);
       this->newCmd.r = CONVERT_INTO_STEPS(this->newCmd.r);
-      performCircularArcInterpolation(0);
+      performCircularArcInterpolation(motor_x, motor_y, 0);
       break;
     }
     case COMMAND_MOVEMENT_G03:
@@ -183,7 +185,7 @@ uint8_t Machine::executeMovementCommand()
       this->newCmd.i = CONVERT_INTO_STEPS(this->newCmd.i);
       this->newCmd.j = CONVERT_INTO_STEPS(this->newCmd.j);
       this->newCmd.r = CONVERT_INTO_STEPS(this->newCmd.r);
-      performCircularArcInterpolation(1);
+      performCircularArcInterpolation(motor_x, motor_y, 1);
       break;
     }
     default:
@@ -209,15 +211,15 @@ uint8_t Machine::setMotorsSpeed( uint16_t newSpeed)
 
 
 
-uint8_t Machine::performAxisLinearMovement_G00(Motor& inputMotor, float newAxisPosition)
+uint8_t Machine::performAxisLinearMovement_G00(Motor& inputMotor, int32_t newAxisPosition)
 {
-  if(inputMotor.getPosition() < newAxisPosition)  // MOVE FORWARD
+  if(inputMotor.getPositionInSteps() < newAxisPosition)  // MOVE FORWARD
   {
-    while(inputMotor.getPosition() < newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_FORWARD)) {return ERROR_AXIS_ENDING_EXCEEDED;} }
+    while(inputMotor.getPositionInSteps() < newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_FORWARD)) {return ERROR_AXIS_ENDING_EXCEEDED;} }
   }
-  else if(inputMotor.getPosition() > newAxisPosition)  // MOVE REVERSE
+  else if(inputMotor.getPositionInSteps() > newAxisPosition)  // MOVE REVERSE
   {
-    while(inputMotor.getPosition() > newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_REVERSE)) {return ERROR_AXIS_ENDING_EXCEEDED;} }
+    while(inputMotor.getPositionInSteps() > newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_REVERSE)) {return ERROR_AXIS_ENDING_EXCEEDED;} }
   }
   return RETURN_SUCCES;
 }
@@ -282,11 +284,11 @@ uint8_t Machine::performLinearInterpolation_G01(Point_3d_t& p1)
 // Case 2: (p.x > center.x) AND (p.y > center.y) => X++, Y--  (We are in upper right)
 // Case 3: (p.x > center.x) AND (p.y < center.y) => X--, Y--  (We are in lower right)
 // Case 4: (p.x < center.x) AND (p.y < center.y) => X--, Y++  (We are in lower left)
-uint8_t Machine::performCircularArcInterpolation(uint8_t DIR)
+uint8_t Machine::performCircularArcInterpolation(Motor& axis_1, Motor& axis_2, uint8_t DIR)
 {
-  Point_2d_t p0{motor_x.getStepPosition(), motor_x.getStepPosition()};  // starting point
-  Point_2d_t p1{this->newCmd.x, this->newCmd.y};                        // ending point
-  Point_2d_t p = p0;                                                    // moving point
+  Point_2d_t p0{motor_x.getPositionInSteps(), motor_x.getPositionInSteps()};  // starting point
+  Point_2d_t p1{this->newCmd.x, this->newCmd.y};                              // ending point
+  Point_2d_t p = p0;                                                          // moving point
 
   // Compute center of the cerc
   Point_2d_t center{0,0};
@@ -297,8 +299,8 @@ uint8_t Machine::performCircularArcInterpolation(uint8_t DIR)
   }
   else
   {
-    center.x = motor_x.getStepPosition() + this->newCmd.i;
-    center.y = motor_y.getStepPosition() + this->newCmd.j;
+    center.x = motor_x.getPositionInSteps() + this->newCmd.i;
+    center.y = motor_y.getPositionInSteps() + this->newCmd.j;
   }
 
   // Radius squared of the circle
@@ -355,8 +357,9 @@ uint8_t Machine::performCircularArcInterpolation(uint8_t DIR)
     else if(step_y > 0) { motor_y.step(MOTOR_DIRECTION_FORWARD); }
     else { /*Do not move yet on y axis yet*/ }
 
-    p.x = motor_x.getStepPosition();
-    p.y = motor_y.getStepPosition();
+    // uptade point coordonates
+    p.x = motor_x.getPositionInSteps();
+    p.y = motor_y.getPositionInSteps();
 
 
     // exit when the end point of the arc is reached

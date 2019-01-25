@@ -84,9 +84,9 @@ public:
   uint8_t parseLine(Rx_buffer_t& buffer);
   uint8_t executeMovementCommand();
   uint8_t setMotorsSpeed(uint16_t newSpeed);
-  uint8_t performAxisLinearMovement_G00(Motor& inputMotor, float newAxisPosition);
+  uint8_t performAxisLinearMovement_G00(Motor& inputMotor, int32_t newAxisPosition);
   uint8_t performLinearInterpolation_G01(Point_3d_t& p1);
-  uint8_t performCircularArcInterpolation(uint8_t DIR);
+  uint8_t performCircularArcInterpolation(Motor& axis_1, Motor& axis_2, uint8_t DIR);
 };
 
 
