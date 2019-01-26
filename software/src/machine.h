@@ -13,6 +13,11 @@
 #define COMMAND_MOVEMENT_G02      2u // arc move clockwise
 #define COMMAND_MOVEMENT_G03      3U // arc move counter clockwise
 
+
+#define COMMAND_PLANE_XY_G17      17u // select xy plane [DEFAULT]
+#define COMMAND_PLANE_XZ_G18      18u // select xz plane
+#define COMMAND_PLANE_YZ_G19      19u // select yz plane
+
 #define COMMAND_UNIT_G20          20u // set measurement unit in inches
 #define COMMAND_UNIT_G21          21u // set measurement unit in mm
 
@@ -23,16 +28,35 @@
 #define COMMAND_OFFSET_G92        92u   // set home offset
 
 
+#define COMMAND_TEST_G250         250u   // used for testing
+#define COMMAND_TEST_G251         251u   // used for testing
+#define COMMAND_TEST_G252         252u   // used for testing
+#define COMMAND_TEST_G253         253u   // used for testing
+#define COMMAND_TEST_G254         254u   // used for testing
+#define COMMAND_TEST_G255         255u   // used for testing
+
+
 
 typedef struct
 {
   int32_t x, y;
-}Point_2d_t;
+}Point2d_int32_t;
+
+typedef struct
+{
+  int32_t x, y, z;
+}Point3d_int32_t;
+
+
+typedef struct
+{
+  float x, y;
+}Point2d_float_t;
 
 typedef struct
 {
   float x, y, z;
-}Point_3d_t;
+}Point3d_float_t;
 
 
 
@@ -41,6 +65,7 @@ typedef struct
 typedef struct
 {
   uint8_t movement;     // movement mode chould be G00 G01 G02 G03
+  uint8_t plane;        // selected plane for G02 and G03 cutting: XY Xz Yz
   uint8_t unit;         // set unit to mm (G21) or inches G20
   uint8_t positioning;  // G90 for absolute, G91 for incremental
 }MachineMode_t;
@@ -85,8 +110,10 @@ public:
   uint8_t executeMovementCommand();
   uint8_t setMotorsSpeed(uint16_t newSpeed);
   uint8_t performAxisLinearMovement_G00(Motor& inputMotor, int32_t newAxisPosition);
-  uint8_t performLinearInterpolation_G01(Point_3d_t& p1);
+  uint8_t performLinearInterpolation_G01(Point3d_float_t& p1);
+  uint8_t performLinearInterpolation_G01_Optimized(Point3d_int32_t& p1);
   uint8_t performCircularArcInterpolation(Motor& axis_1, Motor& axis_2, uint8_t DIR);
+  uint8_t performCircularArcInterpolation_Optimized(Motor& axis_1, Motor& axis_2, uint8_t DIR);
 };
 
 

@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "config.h"
 
-#define EPSILON (0.001)
+#define EPSILON (0.005)
 
 // Data types
 typedef struct

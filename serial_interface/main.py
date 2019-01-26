@@ -26,13 +26,23 @@ def readService(ser):
 
 def send_gcode_file(ser, gcodeFile):
     global cnc_available
+
+
     with open(gcodeFile, "r") as file:
         # go through each line and send it
+        lineIndex = 0
         for line in file:
+            lineIndex += 1
+            if line[0] == ';' or line[0] == '\n':
+                continue
+
+            if( ';' in line):
+                line = line[0:line.index(';')] + '\n'
+
             # wait until cnc is available
             while not cnc_available:
                 pass
-
+            print("%d.Sending line: %s"%(lineIndex, line))
             ser.write( line.encode('utf-8') )
             cnc_available = False
 
