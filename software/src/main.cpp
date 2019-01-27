@@ -6,7 +6,9 @@
 Rx_buffer_t rx_buffer;
 Machine machine;
 
-
+// TODO: separate platform functions from CNC abstractization
+// TODO: implement command queue
+// TODO: implement G4 command, wait some ammount of time doing nothing
 
 
 void setup() {
