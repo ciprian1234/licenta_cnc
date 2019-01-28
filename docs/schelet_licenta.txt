@@ -29,3 +29,4 @@ Cuprins
 Biografie: 
 1. AVR atmega328p datasheet
 2. Arduino reference
+3. https://www.autodesk.com/industry/manufacturing/resources/manufacturing-engineer/g-code
