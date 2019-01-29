@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<diagram program="umlet" version="14.2">
-  <zoom_level>10</zoom_level>
+<diagram program="umlet" version="14.3.0">
+  <zoom_level>8</zoom_level>
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>1140</x>
-      <y>180</y>
-      <w>320</w>
-      <h>280</h>
+      <x>384</x>
+      <y>392</y>
+      <w>256</w>
+      <h>224</h>
     </coordinates>
-    <panel_attributes>bg=orange
-Motor
+    <panel_attributes>bg=red
+Class Motor
 --
 uint8_t DIR_PIN;
 uint8_t STEP_PIN;
@@ -37,13 +37,13 @@ moveToHome();
   <element>
     <id>UMLClass</id>
     <coordinates>
-      <x>560</x>
-      <y>220</y>
-      <w>410</w>
-      <h>250</h>
+      <x>352</x>
+      <y>160</y>
+      <w>328</w>
+      <h>200</h>
     </coordinates>
     <panel_attributes>bg=green
-Machine
+Class Machine
 --
 MachineMode_t machineMode;
 MachineCommand_t newCmd;
@@ -62,5 +62,72 @@ performCircularInterpolation(Motor firstAxis, Motor secondAxis)
 
 </panel_attributes>
     <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>440</x>
+      <y>40</y>
+      <w>152</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>bg=yellow
+struct MachineMode_t
+--
+uint8_t movement;
+uint8_t plane;
+uint8_t unit;
+uint8_t positioning;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>504</x>
+      <y>352</y>
+      <w>24</w>
+      <h>56</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>720</x>
+      <y>184</y>
+      <w>144</w>
+      <h>88</h>
+    </coordinates>
+    <panel_attributes>bg=yellow
+struct MachineCommand_t
+--
+float x, y, z;
+float i, j, r;
+uint16_t f;
+union { unit8_t all; } flags;</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>504</x>
+      <y>120</y>
+      <w>24</w>
+      <h>56</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>672</x>
+      <y>232</y>
+      <w>64</w>
+      <h>24</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;&lt;&lt;&lt;-</panel_attributes>
+    <additional_attributes>60.0;10.0;10.0;10.0</additional_attributes>
   </element>
 </diagram>
