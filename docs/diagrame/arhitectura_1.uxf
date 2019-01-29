@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<diagram program="umlet" version="14.2">
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1140</x>
+      <y>180</y>
+      <w>320</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>bg=orange
+Motor
+--
+uint8_t DIR_PIN;
+uint8_t STEP_PIN;
+uint8_t ENDSTOP_PIN;
+uint32_t AXIS_MAX_STEPS;
+int32_t steps;
+uint16_t speed;
+uint16_t delayBetweenSteps; ????uint32????
+--
+Motor(dirPin, stepPin, endstopPin, axisMaxPos);
+step(direction);
+waitBetweenSteps();
+setSpeed(newSpeed);
+setPosition();
+getPosition();
+getPositionInSteps();
+moveToHome();
+
+
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>560</x>
+      <y>220</y>
+      <w>410</w>
+      <h>250</h>
+    </coordinates>
+    <panel_attributes>bg=green
+Machine
+--
+MachineMode_t machineMode;
+MachineCommand_t newCmd;
+Motor motor_x;
+Motor motor_y;
+Motor motor_z;
+--
+Machine();
+init();
+parseLine();
+goToHome();
+executeMovementCommand();
+performLinearMovement_G00(Point p1);
+performLinearInterpolation_G01(Point p1);
+performCircularInterpolation(Motor firstAxis, Motor secondAxis)
+
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</diagram>
