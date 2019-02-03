@@ -91,22 +91,31 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
         break;
 
       case 'M':
-      switch(integerPart)
-      {
-        case 17: digitalWrite(PIN_ENABLE_MOTORS, LOW);  break;  // enable all motors
-        case 18: digitalWrite(PIN_ENABLE_MOTORS, HIGH); break;  // disable all motors
-        default: return ERROR_COMMAND_NOT_SUPPORTED;
-      }
+        switch(integerPart)
+        {
+          case 17: digitalWrite(PIN_ENABLE_MOTORS, LOW);  break;  // enable all motors
+          case 18: digitalWrite(PIN_ENABLE_MOTORS, HIGH); break;  // disable all motors
+          default: return ERROR_COMMAND_NOT_SUPPORTED;
+        }
         break;
 
+
+      // handle special commands
       case '#':
-        Serial.print("{X: "); Serial.print(motor_x.getPosition(), 5); Serial.print(",");
-        Serial.print(" Y: "); Serial.print(motor_y.getPosition(), 5); Serial.print(",");
-        Serial.print(" Z: "); Serial.print(motor_z.getPosition(), 5); Serial.print("}\n");
+        switch(integerPart)
+        {
+          case 1:
+            Serial.print("{X: "); Serial.print(motor_x.getPosition(), 10); Serial.print(",");
+            Serial.print(" Y: "); Serial.print(motor_y.getPosition(), 10); Serial.print(",");
+            Serial.print(" Z: "); Serial.print(motor_z.getPosition(), 10); Serial.print("}\n");
+            break;
+          case 2: break;
+        }
         break;
 
+
+      // hanndle command parameters
       default:
-        // hanndle command parameters
         switch(commandSymbol)
         {
           case 'X':
