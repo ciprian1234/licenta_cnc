@@ -8,7 +8,7 @@ Machine machine;
 
 // TODO: separate platform functions from CNC abstractization
 // TODO: implement command queue
-// TODO: implement G4 command, wait some ammount of time doing nothing
+
 
 
 void setup() {
@@ -38,7 +38,7 @@ void loop() {
   if( true == rx_buffer.ready)
   {
     // DEBUG
-    //Serial.print("1.INPUT: <<"); Serial.print(rx_buffer.data); Serial.print(">>\n");
+    // Serial.print("1.INPUT: <<"); Serial.print(rx_buffer.data); Serial.print(">>\n");
 
     // parse line
     returnedStatus = machine.parseLine(rx_buffer);
@@ -46,6 +46,7 @@ void loop() {
 
     // execute machine command
     returnedStatus = machine.executeMovementCommand();
+    machine.clearCurrentCmd();
     if(RETURN_SUCCES != returnedStatus) { handleRuntimeError(returnedStatus); return; }
 
     /* TODO: maybe save some system information */

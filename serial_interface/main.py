@@ -33,7 +33,7 @@ def send_gcode_file(ser, gcodeFile):
         lineIndex = 0
         for line in file:
             lineIndex += 1
-            if line[0] == ';' or line[0] == '\n':
+            if line[0] == ';' or line[0] == '#' or line[0] == '\n':
                 continue
 
             if( ';' in line):

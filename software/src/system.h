@@ -23,6 +23,7 @@ extern Rx_buffer_t rx_buffer;
 #define ERROR_UNEXPECTED              (255u)
 
 
+void delay_sync(uint32_t us);
 void performSoftwareReset(void);
 void handleRuntimeError(uint8_t errorCode);
 

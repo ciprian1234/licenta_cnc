@@ -2,6 +2,22 @@
 #include <avr/wdt.h>
 
 
+
+
+// perform requested delay in microseconds
+void delay_sync(uint32_t us)
+{
+  do {
+    if(us < 2)    { return; }  // delayMicroseconds - cant handle delays lower then 2us
+    if(us < 1000) { delayMicroseconds((uint16_t)us);  return; }
+    delayMicroseconds(1000);
+    us -= 1000;
+  }while(true);
+}
+
+
+
+
 // perform microcontroller reset
 void performSoftwareReset()
 {
@@ -10,6 +26,9 @@ void performSoftwareReset()
 }
 
 
+
+
+// handle runtime errors
 void handleRuntimeError(uint8_t errorCode)
 {
   // reset rx buffer

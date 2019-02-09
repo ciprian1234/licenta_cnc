@@ -28,6 +28,9 @@ void Machine::init()
   this->motor_z.setPosition(0);
   pinMode(PIN_ENABLE_MOTORS, OUTPUT);
   digitalWrite(PIN_ENABLE_MOTORS, LOW);
+
+  // set line index to 0
+  this->lineIndex = 0;
   // TODO: set drivers in sleep mode - set sleep pin to LOW
 }
 
@@ -63,14 +66,23 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 
     switch(commandSymbol)
     {
+      // treat case with N symbol received
+      case 'N':
+      {
+        this->lineIndex = integerPart;
+        break;
+      }
+
+      // treat case with G symbol received
       case 'G':
-        // handle G type commands
+      {
         switch(integerPart)
         {
           case COMMAND_MOVEMENT_G00:    this->machineMode.movement = COMMAND_MOVEMENT_G00; break;
           case COMMAND_MOVEMENT_G01:    this->machineMode.movement = COMMAND_MOVEMENT_G01; break;
           case COMMAND_MOVEMENT_G02:    this->machineMode.movement = COMMAND_MOVEMENT_G02; break;
           case COMMAND_MOVEMENT_G03:    this->machineMode.movement = COMMAND_MOVEMENT_G03; break;
+          case COMMAND_DWELL_G04:       this->machineMode.waitFlag = 1; break;
           case COMMAND_PLANE_XY_G17:    this->machineMode.plane = COMMAND_PLANE_XY_G17; break;
           case COMMAND_PLANE_XZ_G18:    this->machineMode.plane = COMMAND_PLANE_XZ_G18; break;
           case COMMAND_PLANE_YZ_G19:    this->machineMode.plane = COMMAND_PLANE_YZ_G19; break;
@@ -89,19 +101,25 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
           default: return ERROR_COMMAND_NOT_SUPPORTED;
         }
         break;
+      }
 
+      // treat case with M symbol received
       case 'M':
+      {
         switch(integerPart)
         {
+          case 2: Serial.println("CNC>>>File succcesfully executed!"); break;
           case 17: digitalWrite(PIN_ENABLE_MOTORS, LOW);  break;  // enable all motors
           case 18: digitalWrite(PIN_ENABLE_MOTORS, HIGH); break;  // disable all motors
           default: return ERROR_COMMAND_NOT_SUPPORTED;
         }
         break;
+      }
 
 
-      // handle special commands
+      // treat case with # symbol received  (special commands)
       case '#':
+      {
         switch(integerPart)
         {
           case 1:
@@ -112,10 +130,12 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
           case 2: break;
         }
         break;
+      }
 
 
       // hanndle command parameters
       default:
+      {
         switch(commandSymbol)
         {
           case 'X':
@@ -144,6 +164,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
           case 'T': break;
           default:  return ERROR_SYMBOL_NOT_SUPPORTED;
         } // end switch 2
+      } // end default case
     } // end switch 1
   } //end while
 
@@ -157,9 +178,18 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
 
 uint8_t Machine::executeMovementCommand()
 {
-  //uint8_t returnedStatus = RETURN_SUCCES;
+  // uint8_t returnedStatus = RETURN_SUCCES;
 
-  if(!this->newCmd.flags.all) { return RETURN_SUCCES; } // no movement requested
+  // no movement requested
+  if(!this->newCmd.flags.all) { return RETURN_SUCCES; }
+
+  // wait command requested (G04)
+  if(this->machineMode.waitFlag && this->newCmd.flags.x)
+  {
+    this->machineMode.waitFlag = 0; // reset flag
+    delay(this->newCmd.x);
+    return RETURN_SUCCES;
+  }
 
   // set motors speed
   if(this->newCmd.flags.f) { this->setMotorsSpeed(this->newCmd.f);  }
@@ -213,8 +243,6 @@ uint8_t Machine::executeMovementCommand()
       return ERROR_UNEXPECTED;
   }
 
-  // reset current command data
-  memset(&this->newCmd, 0, sizeof(MachineCommand_t) ); // TODO: move this to a clean up function and call it from main
   return RETURN_SUCCES;
 }
 
@@ -439,11 +467,17 @@ uint8_t Machine::performCircularArcInterpolation(Motor& first_axis, Motor& secon
 
 
     // exit when the end point of the arc is reached
-    if( !this->newCmd.flags.r && (equals(p.x, p1.x) && equals(p.y, p1.y)) ) { Serial.print("ARC COMPLETE: P1 REACHED!"); break;  }
+    if( (this->newCmd.flags.x && this->newCmd.flags.y) && (equals(p.x, p1.x) && equals(p.y, p1.y)) )
+    { Serial.print("ARC COMPLETE: P1 REACHED!"); break;  }
   }
   while( !equals(p.x, p0.x) || !equals(p.y, p0.y) ); // exit when cerc is completed
 
-  //Serial.print("p("); Serial.print(p.x, DEC); Serial.print(","); Serial.print(p.y, DEC); Serial.print(")\n");
+  Serial.print("p("); Serial.print(p.x, DEC); Serial.print(","); Serial.print(p.y, DEC); Serial.print(")\n");
+  if(this->newCmd.flags.x && this->newCmd.flags.y) // corect floating point position problems
+  {
+    first_axis.setPosition(this->newCmd.x);
+    second_axis.setPosition(this->newCmd.y);
+  }
 
   return RETURN_SUCCES;
 }

@@ -8,9 +8,6 @@
 #define AXIS_MAX_SPEED  (MAX_MOTOR_RPM * AXIS_TRAVEL_DISTANCE_360)
 
 
-// Utility function used to set a delay in microseconds
-static void delay_sync(uint32_t us);
-
 
 
 
@@ -171,17 +168,4 @@ void Motor::moveToHome(void)
 
   // 3. update logical position of axis to 0
   this->setPosition(0.0);
-}
-
-
-
-
-void delay_sync(uint32_t us)
-{
-  do {
-    if(us < 2)    { return; }  // delayMicroseconds - cant handle delays lower then 2us
-    if(us < 1000) { delayMicroseconds((uint16_t)us);  return; }
-    delayMicroseconds(1000);
-    us -= 1000;
-  }while(true);
 }

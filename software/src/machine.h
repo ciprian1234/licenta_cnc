@@ -13,6 +13,7 @@
 #define COMMAND_MOVEMENT_G02      2u // arc move clockwise
 #define COMMAND_MOVEMENT_G03      3U // arc move counter clockwise
 
+#define COMMAND_DWELL_G04         4U // wait some ammount of time doing nothing
 
 #define COMMAND_PLANE_XY_G17      17u // select xy plane [DEFAULT]
 #define COMMAND_PLANE_XZ_G18      18u // select xz plane
@@ -68,6 +69,7 @@ typedef struct
   uint8_t plane;        // selected plane for G02 and G03 cutting: XY Xz Yz
   uint8_t unit;         // set unit to mm (G21) or inches G20
   uint8_t positioning;  // G90 for absolute, G91 for incremental
+  uint8_t waitFlag;     // wait notification flag used for G04 command
 }MachineMode_t;
 
 
@@ -95,6 +97,7 @@ class Machine
 {
 private:
   // private variables
+  uint16_t lineIndex;
   MachineMode_t machineMode;
   MachineCommand_t newCmd;
   Motor motor_x;
@@ -108,6 +111,7 @@ public:
   void init();
   uint8_t parseLine(Rx_buffer_t& buffer);
   uint8_t executeMovementCommand();
+  void clearCurrentCmd() {  memset(&this->newCmd, 0, sizeof(MachineCommand_t) );  }
   uint8_t setMotorsSpeed(uint16_t newSpeed);
   uint8_t performAxisLinearMovement_G00(Motor& inputMotor, int32_t newAxisPosition);
   uint8_t performLinearInterpolation_G01(Point3d_float_t& p1);
