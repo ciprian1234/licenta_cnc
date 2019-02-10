@@ -4,13 +4,12 @@
 #include <Arduino.h>
 #include "utilities.h"
 
-// If debug is enabled, debug messages will be sent to serial
-#define DEBUG_ENABLED (1u)
-
 //#define DEBUG_PRINT(str)  if(DEBUG_ENABLED) { Serial.println(str); }
 
 // extern variables
 extern Rx_buffer_t rx_buffer;
+extern uint8_t DEBUG;
+extern float EPSILON;
 
 // Return status of the function is
 #define RETURN_SUCCES                   (0u)

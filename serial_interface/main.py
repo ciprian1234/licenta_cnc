@@ -33,7 +33,7 @@ def send_gcode_file(ser, gcodeFile):
         lineIndex = 0
         for line in file:
             lineIndex += 1
-            if line[0] == ';' or line[0] == '#' or line[0] == '\n':
+            if line[0] == ';' or line[0] == '\n':
                 continue
 
             if( ';' in line):
@@ -42,7 +42,7 @@ def send_gcode_file(ser, gcodeFile):
             # wait until cnc is available
             while not cnc_available:
                 pass
-            print("%d.Sending line: %s"%(lineIndex, line))
+            print("%d.Sending line: %s"%(lineIndex, line), end='')
             ser.write( line.encode('utf-8') )
             cnc_available = False
 

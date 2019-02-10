@@ -122,12 +122,16 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
       {
         switch(integerPart)
         {
-          case 1:
+          case 0: DEBUG = 0; break;
+          case 1: DEBUG = 1; break;
+          case 2: Serial.print("[DEBUG: "); Serial.print(DEBUG); Serial.print("]\n"); break;
+          case 3: Serial.print("[EPSILON: "); Serial.print(EPSILON, 10); Serial.print("]\n"); break;
+          case 4:
             Serial.print("{X: "); Serial.print(motor_x.getPosition(), 10); Serial.print(",");
             Serial.print(" Y: "); Serial.print(motor_y.getPosition(), 10); Serial.print(",");
             Serial.print(" Z: "); Serial.print(motor_z.getPosition(), 10); Serial.print("}\n");
             break;
-          case 2: break;
+          case 5: break;
         }
         break;
       }
@@ -162,6 +166,7 @@ uint8_t Machine::parseLine(Rx_buffer_t& buffer)
           case 'F': this->newCmd.flags.f = true;  this->newCmd.f = commandNumber; break;
           case 'S': break;
           case 'T': break;
+          case 'E': EPSILON = commandNumber; break;
           default:  return ERROR_SYMBOL_NOT_SUPPORTED;
         } // end switch 2
       } // end default case
@@ -260,7 +265,7 @@ uint8_t Machine::setMotorsSpeed( uint16_t newSpeed)
 
 
 
-uint8_t Machine::performAxisLinearMovement_G00(Motor& inputMotor, int32_t newAxisPosition)
+uint8_t Machine::performAxisLinearMovement_G00(Motor& inputMotor, float newAxisPosition)
 {
   if(inputMotor.getPosition() < newAxisPosition)  // MOVE FORWARD
   {
@@ -270,6 +275,10 @@ uint8_t Machine::performAxisLinearMovement_G00(Motor& inputMotor, int32_t newAxi
   {
     while(inputMotor.getPosition() > newAxisPosition) { if(!inputMotor.step(MOTOR_DIRECTION_REVERSE)) {return ERROR_AXIS_ENDING_EXCEEDED;} }
   }
+
+  // correct current logical position (fix EPSILON aproximation issue)
+  inputMotor.setPosition(newAxisPosition);
+
   return RETURN_SUCCES;
 }
 
@@ -322,6 +331,12 @@ uint8_t Machine::performLinearInterpolation_G01(Point3d_float_t& p1)
     }
 
   }
+
+  // correct current logical position (fix EPSILON aproximation issue)
+  if(this->newCmd.flags.x) { motor_x.setPosition(p1.x); }
+  if(this->newCmd.flags.y) { motor_y.setPosition(p1.y); }
+  if(this->newCmd.flags.z) { motor_z.setPosition(p1.z); }
+
   return RETURN_SUCCES;
 }
 
@@ -373,6 +388,7 @@ uint8_t Machine::performLinearInterpolation_G01_Optimized(Point3d_int32_t& p1)
     }
 
   }
+
   return RETURN_SUCCES;
 }
 
@@ -389,8 +405,18 @@ uint8_t Machine::performLinearInterpolation_G01_Optimized(Point3d_int32_t& p1)
 uint8_t Machine::performCircularArcInterpolation(Motor& first_axis, Motor& second_axis, uint8_t DIR)
 {
   Point2d_float_t p0{first_axis.getPosition(), second_axis.getPosition()};  // starting point
-  Point2d_float_t p1{this->newCmd.x, this->newCmd.y};                       // ending point
+  Point2d_float_t p1;                                                       // ending point
   Point2d_float_t p = p0;                                                   // moving point
+
+
+  // check if we should an arc or a complete circle
+  if(this->newCmd.flags.x) // draw an arc
+  {
+    p1.x = this->newCmd.x;
+    p1.y = this->newCmd.y;
+  }
+  else { p1 = p0; } // draw a complete circle
+
 
   // Compute center of the cerc
   Point2d_float_t center{0,0};
@@ -408,15 +434,13 @@ uint8_t Machine::performCircularArcInterpolation(Motor& first_axis, Motor& secon
   // Radius squared of the circle
   float radius_squared = pow(center.x - p0.x, 2) + pow(center.y - p0.y, 2);
 
-  // DEBUGING
-  // Serial.print("[ p0("); Serial.print(p0.x, DEC); Serial.print(","); Serial.print(p0.y, DEC); Serial.print(")");
-  // Serial.print("  p1("); Serial.print(p1.x, DEC); Serial.print(","); Serial.print(p1.y, DEC); Serial.print(")");
-  // Serial.print("  center("); Serial.print(center.x, DEC); Serial.print(","); Serial.print(center.y, DEC); Serial.print(") ]\n");
-  // Serial.print("radius_squared: "); Serial.print(radius_squared); Serial.print("\n");
-  // Serial.print("pow(center.x - p0.x, 2): "); Serial.print(pow(center.x - p0.x, 2)); Serial.print("\n");
-  // Serial.print("pow(center.y - p0.y, 2): "); Serial.print(pow(center.y - p0.y, 2)); Serial.print("\n");
 
-  // tests
+  // TODO: check if p1 is on the circle
+
+  // quickfix: arc not drawing problem. EPSILON too big:
+  uint8_t indexIteration = 0;
+
+  // used to compute step direction
   uint8_t f = 0, a = 0, b = 0;
   float fxy = 0.0;
   uint8_t decision_binary = 0u;
@@ -461,24 +485,19 @@ uint8_t Machine::performCircularArcInterpolation(Motor& first_axis, Motor& secon
     else if(step_y > 0) { if(!second_axis.step(MOTOR_DIRECTION_FORWARD)) { return ERROR_AXIS_ENDING_EXCEEDED; } }
     else { /*Do not move yet on y axis yet*/ }
 
-    // uptade point coordonates
+    // update current point coordonates
     p.x = first_axis.getPosition();
     p.y = second_axis.getPosition();
 
-
-    // exit when the end point of the arc is reached
-    if( (this->newCmd.flags.x && this->newCmd.flags.y) && (equals(p.x, p1.x) && equals(p.y, p1.y)) )
-    { Serial.print("ARC COMPLETE: P1 REACHED!"); break;  }
+    // check exit condition (after iteration 2, to prevent p == p0 break condition)
+    if(indexIteration < 2) { indexIteration++; }
+    else if( equals(p.x, p1.x) && equals(p.y, p1.y) ) { break; } // exit when the end point of the arc is reached
   }
-  while( !equals(p.x, p0.x) || !equals(p.y, p0.y) ); // exit when cerc is completed
+  while(1); // exit when arc is complete
 
-  Serial.print("p("); Serial.print(p.x, DEC); Serial.print(","); Serial.print(p.y, DEC); Serial.print(")\n");
-  if(this->newCmd.flags.x && this->newCmd.flags.y) // corect floating point position problems
-  {
-    first_axis.setPosition(this->newCmd.x);
-    second_axis.setPosition(this->newCmd.y);
-  }
-
+  // correct current logical position (fix EPSILON aproximation issue)
+  if(this->newCmd.flags.x) { first_axis.setPosition(this->newCmd.x); }
+  if(this->newCmd.flags.y) { second_axis.setPosition(this->newCmd.y); }
   return RETURN_SUCCES;
 }
 
@@ -566,7 +585,8 @@ uint8_t Machine::performCircularArcInterpolation_Optimized(Motor& axis_1, Motor&
 
 
     // exit when the end point of the arc is reached
-    if( !this->newCmd.flags.r && (p.x == p1.x && p.y == p1.y) ) { Serial.print("ARC COMPLETE: P1 REACHED!"); break;  }
+    if( (this->newCmd.flags.x) && (p.x == p1.x && p.y == p1.y) )
+    { Serial.print("ARC COMPLETE: P1 REACHED!"); break;  }
   }
   while( (p.x != p0.x) || (p.y != p0.y) ); // exit when cerc is completed
 

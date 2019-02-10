@@ -2,7 +2,9 @@
 #include <avr/wdt.h>
 
 
-
+// Disable or enable DEBUG messages
+uint8_t DEBUG = 0;
+float EPSILON = 0.003;
 
 // perform requested delay in microseconds
 void delay_sync(uint32_t us)
